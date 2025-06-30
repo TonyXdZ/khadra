@@ -5,6 +5,7 @@ charset-normalizer==3.4.2
 cryptography==45.0.4
 Django==5.2.3
 django-allauth==65.9.0
+django-crispy-forms==2.4
 django-phonenumber-field==8.1.0
 idna==3.10
 oauthlib==3.3.1
