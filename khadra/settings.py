@@ -136,4 +136,9 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
+#Configs of allauth
+ACCOUNT_SIGNUP_FIELDS = ['username*', 'email*', 'password1*', 'password2*']
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_ADAPTER = 'users.adapter.KhadraAccountAdapter'
+
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
