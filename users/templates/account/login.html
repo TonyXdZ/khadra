@@ -1,0 +1,31 @@
+{% extends "core/base.html" %}
+{% load static i18n crispy_forms_tags %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans "Login to khadra" %}{% endblock title %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="text-center mt-4">{% trans "Login" %}</h2>
+            <div class="form-container m-3 m-md-4 m-lg-5"> <!-- Responsive margins -->
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <!-- Submit Button -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                    <button type="submit" class="btn btn-success btn-lg px-5">{% trans "Login" %}</button>
+                </div>
+                </form>
+
+                <hr>
+                <div class="form-footer">
+                    <p>{% trans "You don't have an account?" %}  <a href="{% url 'account_signup' %}">{% trans "Signup here" %}</a></p>
+                    <p class="mt-2">{% trans "By registering, you agree to our" %} <a href="#">{% trans "Terms of Service" %}</a> {% trans "and" %} <a href="#">{% trans "Privacy Policy" %}</a></p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
