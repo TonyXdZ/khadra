@@ -19,8 +19,8 @@
                 
                 <hr>
                 <div class="container mt-4">
-                    <p>Already have an account? <a href="#">Sign in here</a></p>
-                    <p class="mt-2">By registering, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></p>
+                    <p>{% trans "Already have an account?" %}  <a href="{% url 'account_login' %}">{% trans "Login here" %}</a></p>
+                    <p class="mt-2">{% trans "By registering, you agree to our" %} <a href="#">{% trans "Terms of Service" %}</a> {% trans "and" %} <a href="#">{% trans "Privacy Policy" %}</a></p>
                 </div>
                 
                 
