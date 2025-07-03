@@ -1,0 +1,199 @@
+{% extends "core/base.html" %}
+{% load static i18n crispy_forms_tags %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans "Welcome to Khadra, Lets make Algeria green again." %}{% endblock title %}
+{% block css %}
+<!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Bootstrap 4.6 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+  <style>
+    .hero-section {
+        background-image: url('https://i.ibb.co/VpvqKQG6/leaves.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        min-height: 80vh;
+        position: relative;
+    }
+
+    .hero-section::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
+        z-index: 1;
+    }
+
+    .hero-section .container {
+        position: relative;
+        z-index: 2;
+    }
+    .khadra-brand-font {
+      font-family: 'Noto Serif', serif;
+      font-weight: 700;
+    }
+    .bg-green-custom {
+      background-color: #064e3b;
+    }
+    .icon-btn {
+      background: none;
+      border: none;
+      color: #f8f9fa;
+    }
+    .badge-notify {
+      position: absolute;
+      top: 0;
+      right: 0;
+      font-size: 0.7rem;
+      padding: 2px 5px;
+      border-radius: 50%;
+    }
+    .footer-links a {
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+    }
+    .footer-links a:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+  </style>
+{% endblock css %}
+
+{% block content %}
+<!-- Hero Section -->
+<section id="home" class="hero-section bg-dark py-5 rounded-bottom shadow">
+    <div class="container text-center position-relative">
+        <h1 class="display-4 text-light font-weight-bold mb-4">
+            {% trans "Reforesting Algeria, One Tree at a Time" %}
+        </h1>
+        <p class="lead text-light mb-4 mx-auto" style="max-width: 720px;">
+            {% trans "Join Khadra in our mission to reforest Algeria, for a sustainable and vibrant future." %}
+        </p>
+        <div class="d-flex justify-content-center flex-wrap">
+            {% if user.is_authenticated %}
+            <a href="#" class="btn btn-outline-light btn-lg font-weight-bold mx-2 mb-2">
+                {% trans "Check the map" %}
+            </a>
+            <a href="#" class="btn btn-outline-light btn-lg font-weight-bold mx-2 mb-2">
+                {% trans "Go to leaderboard" %}
+            </a>
+            {% else %}
+            <a href="{% url 'account_signup' %}" class="btn btn-outline-light btn-lg font-weight-bold mx-2 mb-2">
+                {% trans "Get Started" %}
+            </a>
+            <a href="{% url 'account_login' %}" class="btn btn-outline-light btn-lg font-weight-bold mx-2 mb-2">
+                {% trans "Login" %}
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- About Us Section -->
+<section id="about" class="py-5">
+    <div class="container">
+        <h2 class="text-center text-success mb-5 display-4">{% trans "About Khadra" %}</h2>
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-4 mb-md-0">
+                <img src="https://i.ibb.co/5XhC1wgR/implant.png" alt="Khadra planting trees" class="img-fluid rounded shadow">
+            </div>
+            <div class="col-md-6">
+                <p class="text-secondary lead mb-3">
+                    {% trans "Khadra, meaning green in Arabic, is a passionate non-profit organization dedicated to combating desertification and restoring Algeria's natural landscapes. Our core mission is to plant millions of trees across the country, transforming arid lands into thriving ecosystems." %}
+                </p>
+                <p class="text-secondary lead">
+                    {% trans "We believe in the power of collective action and sustainable practices. Through community engagement, educational programs, and strategic partnerships, Khadra aims to foster a greener, healthier Algeria for future generations. Our vision is an Algeria where lush forests thrive, biodiversity flourishes, and communities live in harmony with nature." %}
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Our Impact Section -->
+<section id="impact" class="bg-light py-5">
+    <div class="container">
+        <h2 class="text-center text-success mb-5 display-4">{% trans "Our Impact So Far" %}</h2>
+        <div class="row text-center">
+            <div class="col-md-4 mb-4">
+                <div class="card p-4 shadow">
+                    <div class="text-success h1 font-weight-bold mb-2">1M+</div>
+                    <p class="lead text-secondary">{% trans "Trees Planted" %}</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card p-4 shadow">
+                    <div class="text-success h1 font-weight-bold mb-2">250+</div>
+                    <p class="lead text-secondary">{% trans "Reforestation Sites" %}</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card p-4 shadow">
+                    <div class="text-success h1 font-weight-bold mb-2">10K</div>
+                    <p class="lead text-secondary">{% trans "Volunteers Engaged" %}</p>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <a href="#{# url to the main map view with current implanting site and previous sites #}" class="btn btn-outline-success btn-lg font-weight-bold">
+                {% trans "View Our Projects" %}
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- How You Can Help Section -->
+<section id="help" class="py-5">
+    <div class="container">
+        <h2 class="text-center text-success mb-5 display-4">{% trans "How You Can Help" %}</h2>
+        <div class="row justify-content-center">
+            <div class="col-md-6 mb-4">
+                <div class="card text-center p-4 shadow">
+                    <div class="display-3 text-success mb-3">🤝</div>
+                    <h3 class="h4 font-weight-bold mb-3 text-success">{% trans "Volunteer" %}</h3>
+                    <p class="text-secondary mb-4">
+                        {% trans "Join our team and get your hands dirty planting trees!" %}
+                    </p>
+                    <a href="{% url 'account_signup' %}" class="btn btn-success font-weight-bold">
+                        {% trans "Become a Volunteer" %}
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card text-center p-4 shadow">
+                    <div class="display-3 text-success mb-3">📣</div>
+                    <h3 class="h4 font-weight-bold mb-3 text-success">{% trans "Spread the Word" %}</h3>
+                    <p class="text-secondary mb-4">
+                        {% trans "Share our mission with your friends and family..." %}
+                    </p>
+                    <a onclick="copyLink()" class="btn btn-success font-weight-bold">
+                        {% trans "Share Now" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+{% block scripts %}
+    <!-- jQuery, Popper, Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+    <script>
+    function copyLink() {
+        navigator.clipboard.writeText(window.location.href)
+        .then(() => alert('Thanks! Link copied to clipboard 😍'))
+        .catch(err => alert('Failed to copy link.'));
+    }
+    </script>
+{% endblock scripts %}
+</body>
+</html>
