@@ -1,4 +1,4 @@
-{% extends "users/base_users.html" %}
+{% extends "core/base.html" %}
 {% load static i18n crispy_forms_tags %}
 {% get_current_language as LANGUAGE_CODE %}
 {% block title %}{% trans "Welcome to Khadra, Lets make Algeria green again." %}{% endblock title %}
@@ -12,14 +12,13 @@
                     {% csrf_token %}
                     {{ form|crispy }}
                     <!-- Submit Button -->
-                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4 mb-4">
                     <button type="submit" class="btn btn-success btn-lg px-5">{% trans "Sign up" %}</button>
                 </div>
                 </form>
                 
-                
                 <hr>
-                <div class="form-footer">
+                <div class="container mt-4">
                     <p>Already have an account? <a href="#">Sign in here</a></p>
                     <p class="mt-2">By registering, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></p>
                 </div>
@@ -29,6 +28,4 @@
         </div>
     </div>
 </div>
-
-
 {% endblock content %}
