@@ -84,8 +84,11 @@
         </div>
       </div>
       <!-- Profile Link -->
-      <a href="#" class="icon-btn">
+      <a href="#" class="icon-btn mr-4">
         <i class="fas fa-user-circle fa-lg"></i>
+      </a>
+      <a href="{% url 'account_logout' %}" class="icon-btn mr-2">
+        <i class="fas fa-sign-out fa-lg"></i>
       </a>
     </div>
     {% endif %}
