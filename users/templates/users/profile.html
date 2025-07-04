@@ -1,0 +1,49 @@
+{% extends "core/base.html" %}
+{% load i18n static %}
+{% block title %}{% trans "My profile in Khadra" %}{% endblock title %}
+{% block content %}
+<section class="container my-5">
+    <header class="mb-4">
+        <h1 class="display-5 text-center">{{user.username}}</h1>
+    </header>
+
+    <!-- User Information Section -->
+    <section class="card mb-4 shadow">
+        <div class="card-body">
+            <h2 class="h5 mb-3 text-center">{% trans "My Information" %}</h2>
+            <p><strong>{% trans "Email" %}:</strong> {{ user.email|escape }}</p>
+            <p><strong>{% trans "Phone Number" %}:</strong> {{ user.phone|default:""|escape }}</p>
+        </div>
+    </section>
+
+    <!-- Tree Planting Activity Section -->
+    <section class="card mb-4 shadow">
+        <div class="card-body">
+            <h2 class="h5 mb-3 text-center ">{% trans "Tree-Planting Activity" %}</h2>
+            <!-- Contributions by Location -->
+            <h3 class="h6 mt-4">{% trans "Contributions by Location" %}</h3>
+            <ul class="list-group list-group-flush">
+                {% for location, trees in initiatives.items %}
+                    <li class="list-group-item">
+                        {% blocktrans with location=location trees=trees %}
+                            Location: {{ location }} — Estimated Trees Planted: {{ trees }}
+                        {% endblocktrans %}
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">
+                        {% trans "No planting records available." %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </section>
+
+    <!-- Placeholder for Future Features -->
+    <section class="card shadow ">
+        <div class="card-body">
+            <h2 class="h5 mb-3 text-center">{% trans "Coming Soon" %}</h2>
+            <p class="text-muted">{% trans "Badges, achievements, and community impact will be displayed here." %}</p>
+        </div>
+    </section>
+</section>
+{% endblock %}
