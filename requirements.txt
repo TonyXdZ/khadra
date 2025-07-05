@@ -6,11 +6,14 @@ crispy-bootstrap4==2025.6
 cryptography==45.0.4
 Django==5.2.3
 django-allauth==65.9.0
+django-appconf==1.1.0
 django-crispy-forms==2.4
+django-imagekit==5.0.0
 django-phonenumber-field==8.1.0
 idna==3.10
 oauthlib==3.3.1
 phonenumbers==9.0.8
+pilkit==3.0
 pillow==11.3.0
 pycparser==2.22
 PyJWT==2.10.1
