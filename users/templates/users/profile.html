@@ -3,6 +3,13 @@
 {% block title %}{% trans "My profile in Khadra" %}{% endblock title %}
 {% block content %}
 <section class="container my-5">
+    
+    {% if user.profile.profile_pic %}
+    <div class="text-center bg-light">
+      <a href="{{ user.profile.profile_pic.url }}"><img src="{{ user.profile.profile_pic_256.url }}" class="img-thumbnail rounded-circle shadow-lg p-3"></a>
+      <p class="h2 mt-2"> {{ profile.user.username }} </p>
+    </div>
+    {% endif %}
     <header class="mb-4">
         <h1 class="display-5 text-center">{{user.username}}</h1>
     </header>
