@@ -3,7 +3,7 @@ from allauth.account.models import EmailAddress
 from django.test import Client, TestCase
 from django.urls import reverse
 from users.models import Profile
-from users.tests.test_utils import create_new_user
+from users.tests.test_utils import create_new_user, create_test_image
 
 
 UserModel = get_user_model()
@@ -39,7 +39,7 @@ class UserSignUpTestCase(TestCase):
 
     def test_full_sign_up_with_profile_creation(self):
         """
-        Signup and create profile normally
+        Signup and create profile normally without profile picture
         """
         sign_up_response = self.client_1.post( reverse('account_signup'),
                                 {
@@ -69,6 +69,42 @@ class UserSignUpTestCase(TestCase):
         self.assertEqual( hasattr(new_user, 'profile'), True)
         self.assertEqual( new_user.profile.bio, 'ssup')
         self.assertEqual( new_user.profile.phone_number, '+213666778855')
+
+    def test_full_sign_up_with_profile_creation_and_profile_pic(self):
+        """
+        Signup and create profile normally WITH profile picture
+        """
+        sign_up_response = self.client_1.post( reverse('account_signup'),
+                                {
+                                 'username':'charoufa', 
+                                 'email': 'achref@gmail.com',
+                                 'password1': 'qsdf654654',
+                                 'password2': 'qsdf654654',
+                                }, 
+                             )
+        #Verify email address
+        email_address = EmailAddress.objects.get(email='achref@gmail.com')
+        email_address.verified = True
+        email_address.primary = True
+        email_address.save()
+        test_image_file = create_test_image()
+
+        #Login the user since he logged out unil email is verified
+        self.client_1.post(reverse('account_login'), {'login': 'charoufa', 'password': 'qsdf654654'})
+        profile_response = self.client_1.post( reverse('create-profile'), 
+                                        {'profile_pic': test_image_file,
+                                        'account_type': 'volunteer',
+                                        'bio': 'ssup', 
+                                        'phone_number': '0666778855'})
+
+        new_user = UserModel.objects.get(username='charoufa')
+
+        self.assertEqual( profile_response.status_code , 302)
+        self.assertEqual( new_user.username , 'charoufa')
+        self.assertEqual( hasattr(new_user, 'profile'), True)
+        self.assertEqual( new_user.profile.bio, 'ssup')
+        self.assertEqual( new_user.profile.phone_number, '+213666778855')
+        self.assertNotEqual( new_user.profile.profile_pic, '' )
 
     def test_redirect_when_profile_not_created(self):
         """
