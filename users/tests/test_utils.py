@@ -1,3 +1,6 @@
+from io import BytesIO
+from PIL import Image
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
 from allauth.account.models import EmailAddress
 from users.models import Profile
@@ -12,3 +15,14 @@ def create_new_user(email, username, password, phone_number, bio, account_type='
     email = EmailAddress.objects.create(user=user, email=email, verified=True, primary=True)
     Profile.objects.create(user=user, phone_number=phone_number, account_type=account_type)
     return user
+
+
+def create_test_image(name='test.jpg', ext='JPEG', size=(100, 100), color=(255, 0, 0)):
+    """
+    Helper function that returns an image file that will be used in tests
+    """
+    file = BytesIO()
+    image = Image.new('RGB', size, color)
+    image.save(file, ext)
+    file.seek(0)
+    return SimpleUploadedFile(name, file.read(), content_type='image/jpeg')
