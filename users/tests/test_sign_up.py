@@ -76,3 +76,65 @@ class UserSignUpTestCase(TestCase):
         self.assertEqual( hasattr(new_user, 'profile'), True)
         self.assertEqual( new_user.profile.bio, 'ssup')
         self.assertEqual( new_user.profile.phone_number, '+213666778855')
+
+    def test_redirect_when_profile_not_created(self):
+        """
+        Users without a profile are redirected from 'profile'
+        to 'create_profile' page.
+        """
+        sign_up_response = self.client_1.post( reverse('account_signup'),
+                                {
+                                 'username':'redirected_user', 
+                                 'email': 'redirected_user@gmail.com',
+                                 'password1': 'qsdf654654',
+                                 'password2': 'qsdf654654',
+                                }, 
+                             )
+        #Verify email address
+        email_address = EmailAddress.objects.get(email='redirected_user@gmail.com')
+        email_address.verified = True
+        email_address.primary = True
+        email_address.save()
+
+        #Login the user since he logged out unil email is verified
+        self.client_1.post(reverse('account_login'), {'login': 'redirected_user', 'password': 'qsdf654654'})
+        
+        #request my profile without a profile
+        my_profile_response = self.client_1.get(reverse('profile'))
+        
+        self.assertRedirects(
+            my_profile_response,
+            reverse('create-profile'),
+            status_code=302,
+            fetch_redirect_response=False
+        )
+
+    def test_users_with_profile_can_access_profile_page(self):
+        """
+        Signup and create profile normally and assert
+        users can access profile page
+        """
+        sign_up_response = self.client_1.post( reverse('account_signup'),
+                                {
+                                 'username':'no_redirect_user', 
+                                 'email': 'no_redirect_user@gmail.com',
+                                 'password1': 'qsdf654654',
+                                 'password2': 'qsdf654654',
+                                }, 
+                             )
+        #Verify email address
+        email_address = EmailAddress.objects.get(email='no_redirect_user@gmail.com')
+        email_address.verified = True
+        email_address.primary = True
+        email_address.save()
+
+        #Login the user since he logged out unil email is verified
+        self.client_1.post(reverse('account_login'), {'login': 'no_redirect_user', 'password': 'qsdf654654'})
+        profile_response = self.client_1.post( reverse('create-profile'), 
+                                        {'account_type': 'volunteer',
+                                        'bio': 'ssup', 
+                                        'phone_number': '0666778855'})
+
+        get_profile_response = self.client_1.get(reverse('profile'))
+
+        self.assertEqual( get_profile_response.status_code , 200)
