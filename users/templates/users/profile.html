@@ -19,7 +19,7 @@
         <div class="card-body">
             <h2 class="h5 mb-3 text-center">{% trans "My Information" %}</h2>
             <p><strong>{% trans "Email" %}:</strong> {{ user.email|escape }}</p>
-            <p><strong>{% trans "Phone Number" %}:</strong> {{ user.phone|default:""|escape }}</p>
+            <p><strong>{% trans "Phone Number" %}:</strong> {{ user.profile.phone_number.as_national|default:""|escape }}</p>
         </div>
     </section>
 
