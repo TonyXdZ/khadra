@@ -17,6 +17,7 @@ class Profile(models.Model):
     
     user = models.OneToOneField(User, verbose_name=_('User'), on_delete=models.CASCADE)
     account_type = models.CharField(_('Account type'), max_length=100, choices=ACCOUNT_TYPE_CHOICES, blank=True, null=True)
+    profile_pic = models.ImageField(_("Profile picture"), default=None, upload_to='profile_pics', blank=True, null=True)
     phone_number = PhoneNumberField(_('Phone number'), help_text=_('Personal phone number'))
     bio = models.TextField(
         _('Biography'),

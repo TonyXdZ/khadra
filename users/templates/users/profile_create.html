@@ -8,7 +8,7 @@
         <div class="col-lg-8">
             <h2 class="text-center mt-4">Welcome to Khadra</h2>
             <div class="form-container m-3 m-md-4 m-lg-5"> <!-- Responsive margins -->
-                <form method="POST">
+                <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     {{ form|crispy }}
                     <!-- Submit Button -->
@@ -16,8 +16,6 @@
                     <button type="submit" class="btn btn-success btn-lg px-5">{% trans "Sign up" %}</button>
                 </div>
                 </form>
-                
-                
                 <hr>
                 <div class="form-footer">
                     <p>Already have an account? <a href="#">Sign in here</a></p>

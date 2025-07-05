@@ -11,6 +11,7 @@ django-phonenumber-field==8.1.0
 idna==3.10
 oauthlib==3.3.1
 phonenumbers==9.0.8
+pillow==11.3.0
 pycparser==2.22
 PyJWT==2.10.1
 requests==2.32.4
