@@ -156,3 +156,50 @@ class UserTestCase(TestCase):
         get_profile_response = self.client_1.get(reverse('profile'))
 
         self.assertEqual( get_profile_response.status_code , 200)
+
+    def test_update_user_profile(self):
+        """
+        Signup and create profile normally WITH profile picture
+        """
+        sign_up_response = self.client_1.post( reverse('account_signup'),
+                                {
+                                 'username':'tobe_updated', 
+                                 'email': 'tobe_updated@gmail.com',
+                                 'password1': 'qsdf654654',
+                                 'password2': 'qsdf654654',
+                                }, 
+                             )
+        #Verify email address
+        verify_email_address('tobe_updated@gmail.com')
+
+        test_image_file = create_test_image()
+
+        #Login the user since he logged out unil email is verified
+        self.client_1.post(reverse('account_login'), {'login': 'tobe_updated', 'password': 'qsdf654654'})
+        profile_response = self.client_1.post( reverse('create-profile'), 
+                                        {'profile_pic': test_image_file,
+                                        'account_type': 'volunteer',
+                                        'bio': 'ssup', 
+                                        'phone_number': '0666778855'})
+
+
+        #Profile update part
+        profile_response = self.client_1.post( reverse('profile-update'), 
+                                        {'profile_pic-clear': 'on',#clears the profile pic field
+                                        'account_type': 'manager',
+                                        'bio': 'new bio', 
+                                        'phone_number': '0666778866',
+                                        'username': 'already_updated',
+                                        'first_name': 'Happy',
+                                        'last_name': 'User',
+                                        })
+        updated_user = UserModel.objects.get(username='already_updated')
+
+        self.assertEqual( profile_response.status_code , 302)
+        self.assertEqual( updated_user.username , 'already_updated')
+        self.assertEqual( updated_user.first_name , 'Happy')
+        self.assertEqual( updated_user.last_name , 'User')
+        self.assertEqual( updated_user.profile.bio, 'new bio')
+        self.assertEqual( updated_user.profile.account_type, 'manager')#Might change in the future
+        self.assertEqual( updated_user.profile.phone_number, '+213666778866')
+        self.assertEqual( updated_user.profile.profile_pic, '' )
