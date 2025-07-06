@@ -3,56 +3,95 @@
 {% block title %}{% trans "My profile in Khadra" %}{% endblock title %}
 {% block content %}
 <section class="container my-5">
-    
-    {% if user.profile.profile_pic %}
-    <div class="text-center bg-light">
-      <a href="{{ user.profile.profile_pic.url }}"><img src="{{ user.profile.profile_pic_256.url }}" class="img-thumbnail rounded-circle shadow-lg p-3"></a>
-      <p class="h2 mt-2"> {{ profile.user.username }} </p>
+  <div class="row">
+    <!-- Menu Button (Visible only on small screens) -->
+    <div class="col-12 d-md-none mb-3 text-right">
+      <button class="btn btn-outline-dark" type="button" data-toggle="collapse" data-target="#profileSidebar" aria-expanded="false" aria-controls="profileSidebar">
+        <i class="fas fa-cog mr-1"></i>{% trans "Account settings" %}
+      </button>
     </div>
-    {% endif %}
-    <header class="mb-4">
-        <h1 class="display-5 text-center">{{user.username}}</h1>
-    </header>
 
-    <!-- User Information Section -->
-    <section class="card mb-4 shadow">
+    <!-- Side Panel Navigation -->
+    <aside class="col-md-4 mb-4 collapse d-md-block" id="profileSidebar">
+      <div class="card shadow">
         <div class="card-body">
-            <h2 class="h5 mb-3 text-center">{% trans "My Information" %}</h2>
-            <p><strong>{% trans "Email" %}:</strong> {{ user.email|escape }}</p>
-            <p><strong>{% trans "Phone Number" %}:</strong> {{ user.profile.phone_number.as_national|default:""|escape }}</p>
-            <div class="text-center"><a href="{% url 'profile-update' %}" class="btn btn-outline-dark">{% trans "Update" %}</a></div>
-            
+          <h5 class="card-title text-center text-dark">{% trans "Account Settings" %}</h5>
+          <hr>
+          <ul class="nav flex-column">
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'profile-update' %}">
+                <i class="fas fa-user-edit mr-2"></i> {% trans "Update Profile" %}</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'account_change_password' %}">
+                <i class="fas fa-key mr-2"></i>{% trans "Change Password" %}</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'account_email' %}">
+                <i class="fas fa-envelope mr-2"></i>{% trans "Manage Emails" %}</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'socialaccount_connections' %}">
+                <i class="fas fa-link mr-2"></i>{% trans "Manage Social Links" %}</a>
+            </li>
+          </ul>
         </div>
-    </section>
+      </div>
+    </aside>
 
-    <!-- Tree Planting Activity Section -->
-    <section class="card mb-4 shadow">
-        <div class="card-body">
-            <h2 class="h5 mb-3 text-center ">{% trans "Tree-Planting Activity" %}</h2>
-            <!-- Contributions by Location -->
-            <h3 class="h6 mt-4">{% trans "Contributions by Location" %}</h3>
-            <ul class="list-group list-group-flush">
-                {% for location, trees in initiatives.items %}
-                    <li class="list-group-item">
-                        {% blocktrans with location=location trees=trees %}
-                            Location: {{ location }} — Estimated Trees Planted: {{ trees }}
-                        {% endblocktrans %}
-                    </li>
-                {% empty %}
-                    <li class="list-group-item text-muted">
-                        {% trans "No planting records available." %}
-                    </li>
-                {% endfor %}
-            </ul>
+    <!-- Main Profile Content -->
+    <div class="col-md-8">
+      {% if user.profile.profile_pic %}
+        <div class="text-center bg-light mb-4">
+          <a href="{{ user.profile.profile_pic.url }}">
+            <img src="{{ user.profile.profile_pic_256.url }}" class="img-thumbnail rounded-circle shadow-lg p-3">
+          </a>
+          <p class="h2 mt-2">{{ profile.user.username }}</p>
         </div>
-    </section>
+      {% endif %}
 
-    <!-- Placeholder for Future Features -->
-    <section class="card shadow ">
+      <header class="mb-4">
+        <h1 class="display-5 text-center">{{ user.username }}</h1>
+      </header>
+
+      <!-- User Info -->
+      <section class="card mb-4 shadow">
         <div class="card-body">
-            <h2 class="h5 mb-3 text-center">{% trans "Coming Soon" %}</h2>
-            <p class="text-muted">{% trans "Badges, achievements, and community impact will be displayed here." %}</p>
+          <h2 class="h5 mb-3 text-center">{% trans "My Information" %}</h2>
+          <p><strong>{% trans "Email" %}:</strong> {{ user.email|escape }}</p>
+          <p><strong>{% trans "Phone Number" %}:</strong> {{ user.profile.phone_number.as_national|default:""|escape }}</p>
         </div>
-    </section>
+      </section>
+
+      <!-- Tree Planting Activity -->
+      <section class="card mb-4 shadow">
+        <div class="card-body">
+          <h2 class="h5 mb-3 text-center">{% trans "Tree-Planting Activity" %}</h2>
+          <h3 class="h6 mt-4">{% trans "Contributions by Location" %}</h3>
+          <ul class="list-group list-group-flush">
+            {% for location, trees in initiatives.items %}
+              <li class="list-group-item">
+                {% blocktrans with location=location trees=trees %}
+                  Location: {{ location }} — Estimated Trees Planted: {{ trees }}
+                {% endblocktrans %}
+              </li>
+            {% empty %}
+              <li class="list-group-item text-muted">
+                {% trans "No planting records available." %}
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </section>
+
+      <!-- Future Features -->
+      <section class="card shadow">
+        <div class="card-body">
+          <h2 class="h5 mb-3 text-center">{% trans "Coming Soon" %}</h2>
+          <p class="text-muted">{% trans "Badges, achievements, and community impact will be displayed here." %}</p>
+        </div>
+      </section>
+    </div>
+  </div>
 </section>
 {% endblock %}
