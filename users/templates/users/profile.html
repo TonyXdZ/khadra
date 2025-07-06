@@ -20,6 +20,8 @@
             <h2 class="h5 mb-3 text-center">{% trans "My Information" %}</h2>
             <p><strong>{% trans "Email" %}:</strong> {{ user.email|escape }}</p>
             <p><strong>{% trans "Phone Number" %}:</strong> {{ user.profile.phone_number.as_national|default:""|escape }}</p>
+            <div class="text-center"><a href="{% url 'profile-update' %}" class="btn btn-outline-dark">{% trans "Update" %}</a></div>
+            
         </div>
     </section>
 
