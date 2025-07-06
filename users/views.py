@@ -5,7 +5,8 @@ from django.utils.translation import gettext as _
 from django.views.generic.edit import CreateView
 from django.views.generic import TemplateView
 from users.models import Profile
-from users.forms import ProfileCreationForm
+from users.forms import ProfileCreationForm, UserUpdateForm, ProfileUpdateForm
+
 
 class ProfileCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Profile
@@ -29,7 +30,7 @@ class ProfileCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 
 
 class MyProfileView(LoginRequiredMixin, TemplateView):
-    model = Profile
+    
     template_name = 'users/profile.html'
 
     def get(self, request, *args, **kwargs):
@@ -38,3 +39,29 @@ class MyProfileView(LoginRequiredMixin, TemplateView):
             messages.warning( self.request, _('You did not complete your sign up, please finish it to access all the features in the platform.'))
             return redirect('create-profile')
         return render(request, self.template_name, context )
+
+
+class ProfileUpdateView(LoginRequiredMixin, TemplateView):
+    template_name = 'users/profile_update.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user_form'] = UserUpdateForm(instance=self.request.user)
+        context['profile_form'] = ProfileUpdateForm(instance=self.request.user.profile)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        user_form = UserUpdateForm(request.POST, instance=request.user)
+        profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
+
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(self.request, _('Profile updated successfully'))
+            return redirect('profile')  # adjust to your URL name
+
+        # If not valid, return context with bound forms (with errors)
+        return self.render_to_response({
+            'user_form': user_form,
+            'profile_form': profile_form
+        })

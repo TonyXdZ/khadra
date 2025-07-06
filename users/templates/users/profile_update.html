@@ -1,0 +1,35 @@
+{% extends "core/base.html" %}
+{% load static i18n crispy_forms_tags %}
+{% get_current_language as LANGUAGE_CODE %}
+{% block title %}{% trans "Update your info in Khadra" %}{% endblock title %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="text-center mt-4">{% trans "Update your info" %}</h2>
+            <hr>
+            <div class="form-container m-3 m-md-4 m-lg-5"> <!-- Responsive margins -->
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div>
+                        {% if user.profile.profile_pic %}
+                        <div class="text-center bg-light">
+                            <a href="{{ user.profile.profile_pic.url }}"><img src="{{ user.profile.profile_pic_256.url }}" class="img-thumbnail rounded-circle shadow-lg p-3"></a>
+                            <p class="h2 mt-2"> {{ profile.user.username }} </p>
+                        </div>
+                        {% endif %}
+                        {{ profile_form|crispy }}
+                    </div>
+                    <div>
+                        {{ user_form|crispy }}
+                    </div>
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                        <button type="submit" class="btn btn-outline-success btn-lg px-5">{% trans "Update" %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
