@@ -3,7 +3,7 @@ from allauth.account.models import EmailAddress
 from django.test import Client, TestCase
 from django.urls import reverse
 from users.models import Profile
-from users.tests.test_utils import create_new_user, create_test_image
+from users.tests.test_utils import create_new_user, create_test_image, verify_email_address
 
 
 UserModel = get_user_model()
@@ -50,10 +50,7 @@ class UserSignUpTestCase(TestCase):
                                 }, 
                              )
         #Verify email address
-        email_address = EmailAddress.objects.get(email='achref@gmail.com')
-        email_address.verified = True
-        email_address.primary = True
-        email_address.save()
+        verify_email_address('achref@gmail.com')
 
         #Login the user since he logged out unil email is verified
         self.client_1.post(reverse('account_login'), {'login': 'charoufa', 'password': 'qsdf654654'})
@@ -83,10 +80,8 @@ class UserSignUpTestCase(TestCase):
                                 }, 
                              )
         #Verify email address
-        email_address = EmailAddress.objects.get(email='achref@gmail.com')
-        email_address.verified = True
-        email_address.primary = True
-        email_address.save()
+        verify_email_address('achref@gmail.com')
+
         test_image_file = create_test_image()
 
         #Login the user since he logged out unil email is verified
@@ -120,10 +115,7 @@ class UserSignUpTestCase(TestCase):
                                 }, 
                              )
         #Verify email address
-        email_address = EmailAddress.objects.get(email='redirected_user@gmail.com')
-        email_address.verified = True
-        email_address.primary = True
-        email_address.save()
+        verify_email_address('redirected_user@gmail.com')
 
         #Login the user since he logged out unil email is verified
         self.client_1.post(reverse('account_login'), {'login': 'redirected_user', 'password': 'qsdf654654'})
@@ -152,10 +144,7 @@ class UserSignUpTestCase(TestCase):
                                 }, 
                              )
         #Verify email address
-        email_address = EmailAddress.objects.get(email='no_redirect_user@gmail.com')
-        email_address.verified = True
-        email_address.primary = True
-        email_address.save()
+        verify_email_address('no_redirect_user@gmail.com')
 
         #Login the user since he logged out unil email is verified
         self.client_1.post(reverse('account_login'), {'login': 'no_redirect_user', 'password': 'qsdf654654'})

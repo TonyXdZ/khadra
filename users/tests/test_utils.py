@@ -26,3 +26,19 @@ def create_test_image(name='test.jpg', ext='JPEG', size=(100, 100), color=(255, 
     image.save(file, ext)
     file.seek(0)
     return SimpleUploadedFile(name, file.read(), content_type='image/jpeg')
+
+
+def verify_email_address(email):
+    """
+    Marks the given email address as verified and primary for the associated user.
+
+    Parameters:
+        email (str): The email address to verify.
+
+    Raises:
+        EmailAddress.DoesNotExist: If no EmailAddress object with the given email is found.
+    """
+    email_address = EmailAddress.objects.get(email=email)
+    email_address.verified = True
+    email_address.primary = True
+    email_address.save()
