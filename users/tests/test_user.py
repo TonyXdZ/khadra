@@ -9,7 +9,7 @@ from users.tests.test_utils import create_new_user, create_test_image, verify_em
 UserModel = get_user_model()
 
 
-class UserSignUpTestCase(TestCase):
+class UserTestCase(TestCase):
 
     @classmethod
     def setUpTestData(self):
