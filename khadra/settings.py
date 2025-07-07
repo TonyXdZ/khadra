@@ -149,3 +149,7 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_ADAPTER = 'users.adapter.KhadraAccountAdapter'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+#Email backend configs
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
