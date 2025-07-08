@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: khadra_dev_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: khadra_dev_db
+      POSTGRES_USER: khadra_dev_user
+      POSTGRES_PASSWORD: khadra_dev_pass
+    ports:
+      - "5433:5432"
+
+  web:
+    build: .
+    container_name: khadra_app
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - .env.dev
+
+volumes:
+  postgres_data:

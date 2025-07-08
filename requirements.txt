@@ -15,9 +15,12 @@ oauthlib==3.3.1
 phonenumbers==9.0.8
 pilkit==3.0
 pillow==11.3.0
+psycopg==3.2.9
+psycopg-binary==3.2.9
 pycparser==2.22
 PyJWT==2.10.1
 requests==2.32.4
 requests-oauthlib==2.0.0
 sqlparse==0.5.3
+typing_extensions==4.14.1
 urllib3==2.5.0
