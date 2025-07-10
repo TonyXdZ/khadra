@@ -159,3 +159,24 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 #Email backend configs
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+# Spatial data paths for prod and for automated tests
+
+# Full weight layers for prod and manual testing
+
+SPATIAL_LAYER_PATHS = {
+    'DZ' : {
+        'country' : os.path.join(BASE_DIR, "geodata/prod_layers/DZ/dz.shp"),
+        'cities' : os.path.join(BASE_DIR, "geodata/prod_layers/DZ/Cities/dz.shp"),
+    }
+}
+
+#Light weight layers to use in automated tests (to speed up tests)
+
+TEST_SPATIAL_LAYER_PATHS = {
+    'DZ' : {
+        'country' : os.path.join(BASE_DIR, "geodata/test_layers/DZ/dz.shp"),
+        'cities' : os.path.join(BASE_DIR, "geodata/test_layers/DZ/Cities/dz.shp"),
+    }
+}
