@@ -103,6 +103,13 @@ class Profile(models.Model):
         )
     
     user = models.OneToOneField(User, verbose_name=_('User'), on_delete=models.CASCADE)
+
+    country = models.ForeignKey(Country, verbose_name=_('Country'), on_delete=models.SET_NULL, null=True)
+
+    city = models.ForeignKey(City, verbose_name=_('City'), on_delete=models.SET_NULL, null=True)
+    
+    geo_location = models.PointField(verbose_name=_('Geolocation'), srid=4326, null=True, blank=True)
+
     account_type = models.CharField(_('Account type'), max_length=100, choices=ACCOUNT_TYPE_CHOICES, blank=True, null=True)
     
     #Original size profile pic
