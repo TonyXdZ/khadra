@@ -4,4 +4,4 @@ from users.models import Profile, Country, City
 
 admin.site.register(Country, LeafletGeoAdmin)
 admin.site.register(City, LeafletGeoAdmin)
-admin.site.register(Profile)
+admin.site.register(Profile, LeafletGeoAdmin)
