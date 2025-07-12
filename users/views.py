@@ -7,6 +7,7 @@ from django.views.generic.edit import CreateView
 from django.views.generic import TemplateView
 from users.models import Profile, Country, City
 from users.forms import ProfileCreationForm, UserUpdateForm, ProfileUpdateForm
+from users.messages import users_messages
 
 
 class ProfileCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
@@ -18,7 +19,7 @@ class ProfileCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def test_func(self):
         # User already have a profile
         if hasattr(self.request.user, 'profile') :
-            self.permission_denied_message = _('You already have beautiful profile')
+            self.permission_denied_message = users_messages['ALREAD_HAVE_PROFILE']
             return False
         else:
             self.user = self.request.user
@@ -29,7 +30,7 @@ class ProfileCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         profile = form.save(commit=False)
         profile.country = Country.objects.get(iso2='DZ')
         profile.save()
-        messages.success( self.request, _('Account created successfully'))
+        messages.success( self.request, users_messages['ACCOUNT_CREATED_SUCCESS'])
         return super().form_valid(form)
 
 
@@ -40,7 +41,7 @@ class MyProfileView(LoginRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         context = self.get_context_data( ** kwargs)
         if not hasattr(self.request.user, 'profile'):
-            messages.warning( self.request, _('You did not complete your sign up, please finish it to access all the features in the platform.'))
+            messages.warning( self.request, users_messages['UNCOMPLETE_SIGN_UP_WARNING'])
             return redirect('create-profile')
         return render(request, self.template_name, context )
 
@@ -61,8 +62,8 @@ class ProfileUpdateView(LoginRequiredMixin, TemplateView):
         if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
             profile_form.save()
-            messages.success(self.request, _('Profile updated successfully'))
-            return redirect('profile')  # adjust to your URL name
+            messages.success(self.request, users_messages['PROFILE_UPDATE_SUCCESS'])
+            return redirect('profile')
 
         # If not valid, return context with bound forms (with errors)
         return self.render_to_response({

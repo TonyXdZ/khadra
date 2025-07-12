@@ -6,6 +6,7 @@ from leaflet.forms.widgets import LeafletWidget
 from phonenumber_field.formfields import PhoneNumberField
 from allauth.account.models import EmailAddress
 from users.models import Profile, Country, City
+from users.messages import users_messages
 
 UserModel = get_user_model()
 
@@ -49,7 +50,7 @@ class ProfileCreationForm(ModelForm):
         if geo_data and not city:
             # Validate country containment
             if not country.geom.contains(geo_data):
-                self.add_error('geo_location', _('Location must be within Algeria'))
+                self.add_error('geo_location', users_messages['LOCATION_OUTSIDE_COUNTRY'])
                 return cleaned_data
             
             # Find the city containing the geo_location
@@ -57,7 +58,7 @@ class ProfileCreationForm(ModelForm):
                 actual_city = City.objects.get(geom__contains=geo_data)
                 cleaned_data['city'] = actual_city  # Assign the found city
             except City.DoesNotExist:
-                self.add_error('geo_location', _('Location not within any known city'))
+                self.add_error('geo_location', users_messages['LOCATION_UNKNOWN_CITY'])
             except City.MultipleObjectsReturned:
                 actual_city = City.objects.filter(geom__contains=geo_data).first()
                 cleaned_data['city'] = actual_city
@@ -66,19 +67,19 @@ class ProfileCreationForm(ModelForm):
         elif geo_data and city:
             # Validate country containment
             if not country.geom.contains(geo_data):
-                self.add_error('geo_location', _('Location must be within Algeria'))
+                self.add_error('geo_location', users_messages['LOCATION_OUTSIDE_COUNTRY'])
                 return cleaned_data
             
             # Validate city containment
             if not city.geom.contains(geo_data):
                 try:
                     actual_city = City.objects.get(geom__contains=geo_data)
-                    self.add_error('city', _('Location is in %(actual)s, not %(selected)s') % {
+                    self.add_error('city', users_messages['LOCATION_OUTSIDE_CITY'] % {
                         'actual': actual_city.name, 
                         'selected': city.name
                     })
                 except City.DoesNotExist:
-                    self.add_error('geo_location', _('Location not within any known city'))
+                    self.add_error('geo_location', users_messages['LOCATION_UNKNOWN_CITY'])
         
         # Case 3: User selected city but no geo_location
         elif city and not geo_data:
@@ -86,14 +87,14 @@ class ProfileCreationForm(ModelForm):
                 # Generate random location within city
                 cleaned_data['geo_location'] = city.get_random_location_point()
             except Exception as e:
-                self.add_error('city', _('Could not generate location for selected city'))
+                self.add_error('city', users_messages['COULD_NOT_GENERATE_LOCATION_FOR_CITY'])
         
         # Case 4: User selected neither
         else:
             if not geo_data and not city:
                 self.add_error(
                     'city',  # Non-field error
-                    _('Please select either a location on the map or a city')
+                    users_messages['SELECT_CITY_OR_LOCATION']
                 )
         
         return cleaned_data
