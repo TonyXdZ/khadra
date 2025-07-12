@@ -5,6 +5,7 @@ from allauth.account.models import EmailAddress
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from users.models import Profile, City
+from users.messages import users_messages
 from users.tests.test_utils import create_new_user, create_test_image, verify_email_address
 
 
@@ -173,6 +174,161 @@ class UserTestCase(TestCase):
         get_profile_response = self.client_1.get(reverse('profile'))
 
         self.assertEqual( get_profile_response.status_code , 200)
+
+    def test_sign_up_outside_country_geo_location_for_profile_creation(self):
+
+        sign_up_response = self.client_1.post( reverse('account_signup'),
+                                {
+                                'username':'outside_country', 
+                                'email': 'outside_country@gmail.com',
+                                'password1': 'qsdf654654',
+                                'password2': 'qsdf654654',
+                                })
+        #Verify email address
+        verify_email_address('outside_country@gmail.com')
+        
+        #Login the user since he logged out unil email is verified
+        self.client_1.post(reverse('account_login'), {'login': 'outside_country', 'password': 'qsdf654654'})
+
+        point_in_germany = 'SRID=4326;POINT (9.851 51.11)'
+        profile_create_data = {'account_type': 'volunteer',
+                                'bio': 'ssup', 
+                                'phone_number': '0666778855',
+                                'geo_location': point_in_germany,}
+
+        profile_response = self.client_1.post( reverse('create-profile'), profile_create_data )
+        
+        new_user = UserModel.objects.get(username='outside_country')
+        
+        self.assertContains( profile_response, users_messages['LOCATION_OUTSIDE_COUNTRY'])
+        self.assertEqual( hasattr(new_user,'profile'), False)
+
+    def test_sign_up_geo_location_outside_selected_city_profile_creation(self):
+
+        sign_up_response = self.client_1.post( reverse('account_signup'),
+                                {
+                                'username':'outside_city', 
+                                'email': 'outside_city@gmail.com',
+                                'password1': 'qsdf654654',
+                                'password2': 'qsdf654654',
+                                })
+        #Verify email address
+        verify_email_address('outside_city@gmail.com')
+        
+        #Login the user since he logged out unil email is verified
+        self.client_1.post(reverse('account_login'), {'login': 'outside_city', 'password': 'qsdf654654'})
+
+        point_in_oran_city = City.objects.get(name='Oran').geom.centroid
+        
+        profile_create_data = {'account_type': 'volunteer',
+                                'bio': 'ssup', 
+                                'phone_number': '0666778855',
+                                'city': str(self.annaba_city.pk),# Annaba city selected
+                                'geo_location': str(point_in_oran_city),} # Location in Oran city
+
+        profile_response = self.client_1.post( reverse('create-profile'), profile_create_data )
+        
+        new_user = UserModel.objects.get(username='outside_city')
+        
+        self.assertContains( profile_response, users_messages['LOCATION_OUTSIDE_CITY'] % {'actual': 'Oran', 'selected': 'Annaba'})
+        self.assertEqual( hasattr(new_user,'profile'), False)
+
+    def test_sign_up_geo_location_and_selected_city_correct_profile_creation(self):
+
+        sign_up_response = self.client_1.post( reverse('account_signup'),
+                                {
+                                'username':'smart_user', 
+                                'email': 'smart_user@gmail.com',
+                                'password1': 'qsdf654654',
+                                'password2': 'qsdf654654',
+                                })
+        #Verify email address
+        verify_email_address('smart_user@gmail.com')
+        
+        #Login the user since he logged out unil email is verified
+        self.client_1.post(reverse('account_login'), {'login': 'smart_user', 'password': 'qsdf654654'})
+
+        point_in_oran_city = City.objects.get(name='Oran').geom.centroid
+        
+        profile_create_data = {'account_type': 'volunteer',
+                                'bio': 'ssup', 
+                                'phone_number': '0666778855',
+                                'city': str(self.annaba_city.pk),# Annaba city selected
+                                'geo_location': str(self.point_in_annaba),} # Location in Annaba city
+
+        profile_response = self.client_1.post( reverse('create-profile'), profile_create_data )
+        
+        new_user = UserModel.objects.get(username='smart_user')
+        
+        self.assertEqual( hasattr(new_user,'profile'), True)
+        self.assertEqual( new_user.profile.city, self.annaba_city)
+        self.assertEqual( new_user.profile.geo_location, self.point_in_annaba)
+
+    def test_sign_up_geo_location_only_and_automatic_city_profile_creation(self):
+
+        sign_up_response = self.client_1.post( reverse('account_signup'),
+                                {
+                                'username':'sharp_user', 
+                                'email': 'sharp_user@gmail.com',
+                                'password1': 'qsdf654654',
+                                'password2': 'qsdf654654',
+                                })
+        #Verify email address
+        verify_email_address('sharp_user@gmail.com')
+        
+        #Login the user since he logged out unil email is verified
+        self.client_1.post(reverse('account_login'), {'login': 'sharp_user', 'password': 'qsdf654654'})
+
+        point_in_oran_city = City.objects.get(name='Oran').geom.centroid
+        
+        profile_create_data = {'account_type': 'volunteer',
+                                'bio': 'ssup', 
+                                'phone_number': '0666778855',
+                                'geo_location': str(self.point_in_annaba),} # Location in Annaba city
+
+        profile_response = self.client_1.post( reverse('create-profile'), profile_create_data )
+        
+        new_user = UserModel.objects.get(username='sharp_user')
+        
+        self.assertEqual( hasattr(new_user,'profile'), True)
+        self.assertEqual( new_user.profile.city, self.annaba_city)
+        self.assertEqual( new_user.profile.geo_location, self.point_in_annaba)
+
+    def test_sign_up_city_only_and_random_geo_location_profile_creation(self):
+
+        sign_up_response = self.client_1.post( reverse('account_signup'),
+                                {
+                                'username':'lazy_user', 
+                                'email': 'lazy_user@gmail.com',
+                                'password1': 'qsdf654654',
+                                'password2': 'qsdf654654',
+                                })
+        #Verify email address
+        verify_email_address('lazy_user@gmail.com')
+        
+        #Login the user since he logged out unil email is verified
+        self.client_1.post(reverse('account_login'), {'login': 'lazy_user', 'password': 'qsdf654654'})
+
+        point_in_oran_city = City.objects.get(name='Oran').geom.centroid
+        
+        profile_create_data = {'account_type': 'volunteer',
+                                'bio': 'ssup', 
+                                'phone_number': '0666778855',
+                                'city': str(self.annaba_city.pk)}# Annaba city selected
+
+        profile_response = self.client_1.post( reverse('create-profile'), profile_create_data )
+        
+        new_user = UserModel.objects.get(username='lazy_user')
+        
+        self.assertEqual( hasattr(new_user,'profile'), True)
+        self.assertEqual( new_user.profile.city, self.annaba_city)
+
+        is_contained = City.objects.filter(
+            id=self.annaba_city.id,
+            geom__contains=new_user.profile.geo_location
+        ).exists()
+
+        self.assertTrue(is_contained, "The profile's location should be within the selected city")
 
     def test_update_user_profile(self):
         """
