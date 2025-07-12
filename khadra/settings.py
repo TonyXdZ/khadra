@@ -180,3 +180,21 @@ TEST_SPATIAL_LAYER_PATHS = {
         'cities' : os.path.join(BASE_DIR, "geodata/test_layers/DZ/Cities/dz.shp"),
     }
 }
+
+# Leaflet configs 
+# https://django-leaflet.readthedocs.io/en/latest/templates.html#configuration
+
+LEAFLET_CONFIG = {
+    'DEFAULT_CENTER': (28.0339, 1.6596),  # Latitude and Longitude of Algeria
+    'DEFAULT_ZOOM': 5,
+    'MIN_ZOOM': 3,
+    'MAX_ZOOM': 18,
+    'SCALE': None,
+    'ATTRIBUTION_PREFIX': 'Khadra',
+    'RESET_VIEW': False,
+    'PLUGINS': {
+        'forms': {
+            'auto-include': True
+        }
+    }
+}
