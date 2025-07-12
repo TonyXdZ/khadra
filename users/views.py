@@ -1,10 +1,11 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 from django.views.generic.edit import CreateView
 from django.views.generic import TemplateView
-from users.models import Profile
+from users.models import Profile, Country, City
 from users.forms import ProfileCreationForm, UserUpdateForm, ProfileUpdateForm
 
 
@@ -12,6 +13,7 @@ class ProfileCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Profile
     form_class = ProfileCreationForm
     template_name = 'users/profile_create.html'
+    success_url = reverse_lazy('home')
 
     def test_func(self):
         # User already have a profile
@@ -24,9 +26,11 @@ class ProfileCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.user = self.request.user
-        form.save()
-        messages.success( self.request, _('Account created succefully'))
-        return redirect('/')
+        profile = form.save(commit=False)
+        profile.country = Country.objects.get(iso2='DZ')
+        profile.save()
+        messages.success( self.request, _('Account created successfully'))
+        return super().form_valid(form)
 
 
 class MyProfileView(LoginRequiredMixin, TemplateView):
