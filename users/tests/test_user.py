@@ -1,21 +1,26 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from allauth.account.models import EmailAddress
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from users.models import Profile
+from users.models import Profile, City
 from users.tests.test_utils import create_new_user, create_test_image, verify_email_address
 
 
 UserModel = get_user_model()
 
-
+# Ovveriding prod spatial data with light weigth test layers to speed up tests
+@override_settings(SPATIAL_LAYER_PATHS=settings.TEST_SPATIAL_LAYER_PATHS)
 class UserTestCase(TestCase):
 
     @classmethod
     def setUpTestData(self):
-
+        call_command('load_spatial_layers', 'DZ')
         self.client_1 = Client()
         self.client_2 = Client()
+        self.annaba_city = City.objects.get(name='Annaba')
+        self.point_in_annaba = self.annaba_city.get_random_location_point()
 
     def test_user_with_profile_get_403_forbidden_when_trying_access_create_profile_page(self):
         """
@@ -26,7 +31,11 @@ class UserTestCase(TestCase):
                                     username='some_dude',
                                     password='qsdflkjlkj',
                                     phone_number='+213555447766', 
-                                    bio='Some good bio')
+                                    bio='Some good bio',
+                                    account_type='volunteer',
+                                    city=self.annaba_city,
+                                    geo_location=self.point_in_annaba,
+                                    )
 
         #login the new user
         login_response = self.client_1.post(reverse('account_login'), {'login': 'some_dude', 'password': 'qsdflkjlkj'})
@@ -57,7 +66,9 @@ class UserTestCase(TestCase):
         profile_response = self.client_1.post( reverse('create-profile'), 
                                         {'account_type': 'volunteer',
                                         'bio': 'ssup', 
-                                        'phone_number': '0666778855'})
+                                        'phone_number': '0666778855',
+                                        'city': str(self.annaba_city.pk),
+                                        })
 
         new_user = UserModel.objects.get(username='charoufa')
 
@@ -66,6 +77,7 @@ class UserTestCase(TestCase):
         self.assertEqual( hasattr(new_user, 'profile'), True)
         self.assertEqual( new_user.profile.bio, 'ssup')
         self.assertEqual( new_user.profile.phone_number, '+213666778855')
+        self.assertEqual( new_user.profile.city, self.annaba_city)
 
     def test_full_sign_up_with_profile_creation_and_profile_pic(self):
         """
@@ -90,7 +102,9 @@ class UserTestCase(TestCase):
                                         {'profile_pic': test_image_file,
                                         'account_type': 'volunteer',
                                         'bio': 'ssup', 
-                                        'phone_number': '0666778855'})
+                                        'phone_number': '0666778855',
+                                        'city': str(self.annaba_city.pk),
+                                        })
 
         new_user = UserModel.objects.get(username='charoufa')
 
@@ -99,6 +113,7 @@ class UserTestCase(TestCase):
         self.assertEqual( hasattr(new_user, 'profile'), True)
         self.assertEqual( new_user.profile.bio, 'ssup')
         self.assertEqual( new_user.profile.phone_number, '+213666778855')
+        self.assertEqual( new_user.profile.city, self.annaba_city)
         self.assertNotEqual( new_user.profile.profile_pic, '' )
 
     def test_redirect_when_profile_not_created(self):
@@ -151,7 +166,9 @@ class UserTestCase(TestCase):
         profile_response = self.client_1.post( reverse('create-profile'), 
                                         {'account_type': 'volunteer',
                                         'bio': 'ssup', 
-                                        'phone_number': '0666778855'})
+                                        'phone_number': '0666778855',
+                                        'city': str(self.annaba_city.pk),
+                                        })
 
         get_profile_response = self.client_1.get(reverse('profile'))
 
@@ -180,7 +197,9 @@ class UserTestCase(TestCase):
                                         {'profile_pic': test_image_file,
                                         'account_type': 'volunteer',
                                         'bio': 'ssup', 
-                                        'phone_number': '0666778855'})
+                                        'phone_number': '0666778855',
+                                        'city': str(self.annaba_city.pk),
+                                        })
 
 
         #Profile update part
