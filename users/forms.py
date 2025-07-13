@@ -105,9 +105,65 @@ class UserUpdateForm(forms.ModelForm):
         fields = ['username', 'first_name', 'last_name']
 
 
-class ProfileUpdateForm(forms.ModelForm):
-    phone_number = PhoneNumberField(region="DZ")
+class ProfileUpdateForm(ProfileCreationForm):
 
-    class Meta:
-        model = Profile
-        fields = ['profile_pic', 'bio', 'account_type', 'phone_number']
+    def clean(self):
+        cleaned_data = super().clean()
+        profile = self.instance  # Existing Profile
+        geo_data = cleaned_data.get('geo_location')
+        city = cleaned_data.get('city')
+
+        # Store previous values for comparison
+        initial_geo = profile.geo_location
+        initial_city = profile.city
+
+        # Determine what changed
+        geo_changed = geo_data != initial_geo
+        city_changed = city != initial_city
+
+        # If nothing changed, just return
+        if not geo_changed and not city_changed:
+            return cleaned_data
+
+        country = Country.objects.get(iso2='DZ')
+
+        # Case 1: City changed, geo_location unchanged 
+        # assign random geo_location in new city
+        if city_changed and not geo_changed:
+            try:
+                cleaned_data['geo_location'] = city.get_random_location_point()
+            except Exception:
+                self.add_error('city', users_messages['COULD_NOT_GENERATE_LOCATION_FOR_CITY'])
+
+        # Case 2: geo_location changed, city unchanged 
+        # auto-assign city based on point
+        elif geo_changed and not city_changed:
+            if not country.geom.contains(geo_data):
+                self.add_error('geo_location', users_messages['LOCATION_OUTSIDE_COUNTRY'])
+                return cleaned_data
+            try:
+                actual_city = City.objects.get(geom__contains=geo_data)
+                cleaned_data['city'] = actual_city
+            except City.DoesNotExist:
+                self.add_error('geo_location', users_messages['LOCATION_UNKNOWN_CITY'])
+            except City.MultipleObjectsReturned:
+                cleaned_data['city'] = City.objects.filter(geom__contains=geo_data).first()
+
+        # Case 3: both changed 
+        # validate point in country and in selected city
+        elif geo_changed and city_changed:
+            if not country.geom.contains(geo_data):
+                self.add_error('geo_location', users_messages['LOCATION_OUTSIDE_COUNTRY'])
+                return cleaned_data
+
+            if not city.geom.contains(geo_data):
+                try:
+                    actual_city = City.objects.get(geom__contains=geo_data)
+                    self.add_error('city', users_messages['LOCATION_OUTSIDE_CITY'] % {
+                        'actual': actual_city.name,
+                        'selected': city.name
+                    })
+                except City.DoesNotExist:
+                    self.add_error('geo_location', users_messages['LOCATION_UNKNOWN_CITY'])
+
+        return cleaned_data

@@ -1,7 +1,55 @@
 {% extends "core/base.html" %}
-{% load static i18n crispy_forms_tags %}
+{% load static i18n crispy_forms_tags leaflet_tags %}
 {% get_current_language as LANGUAGE_CODE %}
 {% block title %}{% trans "Update your info in Khadra" %}{% endblock title %}
+{% block css %}
+{{ block.super }}
+{% leaflet_css plugins="forms" %}
+<style>
+    /* Custom toggle switch styling */
+    .location-toggle {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+    .toggle-btn {
+        padding: 0.75rem 1.5rem;
+        background-color: #e9ecef;
+        border: 1px solid #ced4da;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 500;
+    }
+    .toggle-btn:first-child {
+        border-radius: 0.25rem 0 0 0.25rem;
+        border-right: none;
+    }
+    .toggle-btn:last-child {
+        border-radius: 0 0.25rem 0.25rem 0;
+        border-left: none;
+    }
+    .toggle-btn.active {
+        background-color: #28a745;
+        color: white;
+        border-color: #28a745;
+        z-index: 1;
+        position: relative;
+    }
+    .toggle-input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .hidden-by-opacity {
+        opacity: 0;
+        pointer-events: none;
+        height: 0;
+        overflow: hidden;
+        transition: opacity 0.3s ease, height 0.3s ease;
+    }
+</style>
+{% endblock css %}
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
@@ -11,6 +59,15 @@
             <div class="form-container m-3 m-md-4 m-lg-5"> <!-- Responsive margins -->
                 <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
+                    {# Profile form hiddden fields #}
+                    {% for hidden in profile_form.hidden_fields %}
+                            {{ hidden }}
+                    {% endfor %}
+
+                    {# User form hiddden fields #}
+                    {% for hidden in user_form.hidden_fields %}
+                            {{ hidden }}
+                    {% endfor %}
                     <div>
                         {% if user.profile.profile_pic %}
                         <div class="text-center bg-light">
@@ -18,10 +75,52 @@
                             <p class="h2 mt-2"> {{ profile.user.username }} </p>
                         </div>
                         {% endif %}
-                        {{ profile_form|crispy }}
-                    </div>
-                    <div>
-                        {{ user_form|crispy }}
+                        <!-- Render profile pic field -->
+                        {% for field in profile_form.visible_fields %}
+                            {% if field.name == 'profile_pic' %}
+                                {{ field|as_crispy_field }}
+                            {% endif %}
+                        {% endfor %}
+                        <div><!-- Render user form -->
+                            {{ user_form|crispy }}
+                        </div>
+                        <p>{% trans 'Your Location' %}</p>
+                        <!-- Location Type Toggle Selector -->
+                        <div class="location-toggle mb-2">
+                            <label class="toggle-btn active" id="city-btn">
+                                <input class="toggle-input" type="radio" name="location_type" value="city" checked>
+                                {% trans "Select City" %}
+                            </label>
+                            <label class="toggle-btn" id="geo-btn">
+                                <input class="toggle-input" type="radio" name="location_type" value="geo">
+                                {% trans "Use Map Location" %}
+                            </label>
+                        </div>
+                        {% if profile_form.geo_location.errors %}
+                            {% for error in profile_form.geo_location.errors %}
+                                <div class="text-danger text-center font-weight-bold">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                        
+                        <!-- City Field -->
+                        <div id="city-field">
+                            {{ profile_form.city|as_crispy_field }}
+                        </div>
+                        
+                        <!-- Geo Location Field -->
+                        <div id="geo-location-field">
+                            <div class="container-fluid">
+                                {{ profile_form.geo_location }}
+                            </div>
+                            <small class="form-text text-muted">{% trans "Click on the map to select your location" %}</small>
+                        </div>
+                        
+                        <!-- Render other fields normally -->
+                        {% for field in profile_form.visible_fields %}
+                            {% if field.name != 'geo_location' and field.name != 'city' and field.name != 'profile_pic' and field.name != 'location_type' %}
+                                {{ field|as_crispy_field }}
+                            {% endif %}
+                        {% endfor %}
                     </div>
                     <!-- Submit Button -->
                     <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
@@ -33,3 +132,38 @@
     </div>
 </div>
 {% endblock content %}
+{% block scripts %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const geoField = document.getElementById('geo-location-field');
+    const cityField = document.getElementById('city-field');
+    const geoBtn = document.getElementById('geo-btn');
+    const cityBtn = document.getElementById('city-btn');
+
+    function toggleFields() {
+        const selected = document.querySelector('input[name="location_type"]:checked').value;
+        if (selected === 'geo') {
+            geoField.classList.remove('hidden-by-opacity');
+            cityField.classList.add('hidden-by-opacity');
+
+            geoBtn.classList.add('active');
+            cityBtn.classList.remove('active');
+
+        } else {
+            geoField.classList.add('hidden-by-opacity');
+            cityField.classList.remove('hidden-by-opacity');
+
+            cityBtn.classList.add('active');
+            geoBtn.classList.remove('active');
+        }
+    }
+
+    geoBtn.addEventListener('click', toggleFields);
+    cityBtn.addEventListener('click', toggleFields);
+
+    toggleFields(); // Initial call
+});
+</script>
+{% leaflet_js plugins="forms" %}
+{% endblock scripts %}
