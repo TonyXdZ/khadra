@@ -105,65 +105,84 @@ class UserUpdateForm(forms.ModelForm):
         fields = ['username', 'first_name', 'last_name']
 
 
-class ProfileUpdateForm(ProfileCreationForm):
+class ProfileUpdateForm(ModelForm):
+    phone_number = PhoneNumberField(region="DZ")
+    geo_location = forms.PointField(widget=LeafletWidget(attrs=LEAFLET_WIDGET_ATTRS), required=False)
+    city = forms.ModelChoiceField(queryset=City.objects.all())
+    
+    class Meta:
+        model = Profile
+        fields = ['profile_pic', 
+                  'account_type', 
+                  'phone_number', 
+                  'bio', 
+                  'city', 
+                  'geo_location']
 
+    def __init__(self, *args, **kwargs):
+        super(ProfileUpdateForm, self).__init__( * args, ** kwargs)
+        
+        #  Set Algeria cities
+        self.fields['city'].queryset = City.objects.filter(country__iso2='DZ')
+    
     def clean(self):
         cleaned_data = super().clean()
-        profile = self.instance  # Existing Profile
         geo_data = cleaned_data.get('geo_location')
         city = cleaned_data.get('city')
+        country = self.instance.country
+        changed_data = self.changed_data
+        
+        if self.has_changed():
+            #  User Changed the City without changing his Geo location
+            #  Assign a random point location in the selected City automatically
+            if changed_data.__contains__('city') and changed_data.__contains__('geo_location') is False:
+                random_location = city.get_random_location_point()
+                cleaned_data['geo_location'] = random_location# city.geom.point_on_surface
+                self.instance.geo_location = random_location
 
-        # Store previous values for comparison
-        initial_geo = profile.geo_location
-        initial_city = profile.city
+            #  User Changed his Geo Location without changing his City
+            #  Assign the City that contains the point location automatically
+            elif changed_data.__contains__('geo_location') and changed_data.__contains__('city') is False:
+            
+                # Check if the chosen location is in the user's country
+                if geo_data:
+                    if country.geom.contains( geo_data ):
+                        cleaned_data['city'] = City.objects.get(geom__contains=geo_data)
+                    else:
+                        self.add_error('geo_location', users_messages['LOCATION_OUTSIDE_COUNTRY'])
+                else:
+                    random_location = city.get_random_location_point()
+                    cleaned_data['geo_location'] = random_location
+                    self.instance.geo_location = random_location
 
-        # Determine what changed
-        geo_changed = geo_data != initial_geo
-        city_changed = city != initial_city
+            # User Changed Both his Geo Location and City
+            elif changed_data.__contains__('geo_location') and changed_data.__contains__('city'):
+                # Check if User select a location on the map
+                if geo_data:
+                    # Check if the chosen location is in the user's country
+                    if country.geom.contains( geo_data ):
+                        # Check if the location inside the chosen City
+                        if city.geom.contains( geo_data ) :
+                            cleaned_data['geo_location'] = geo_data
+                            cleaned_data['city'] = city
+                        # The chosen location is not in the selected City
+                        else:
+                            selected_city = City.objects.get(geom__contains=geo_data)
+                            actual_city = City.objects.get(geom__contains=geo_data)
+                            self.add_error('city', users_messages['LOCATION_OUTSIDE_CITY'] % {
+                                            'actual': actual_city.name,
+                                            'selected': city.name
+                                        })
+                    # The chosen location is not in the user's country
+                    else:
+                        self.add_error('geo_location', users_messages['LOCATION_OUTSIDE_COUNTRY'])
+                # User cleared his Geo Location
+                # Assign a random point location in the selected City automatically
+                else:
+                    random_location = city.get_random_location_point()
+                    cleaned_data['geo_location'] = random_location
+                    self.instance.geo_location = random_location
 
-        # If nothing changed, just return
-        if not geo_changed and not city_changed:
-            return cleaned_data
-
-        country = Country.objects.get(iso2='DZ')
-
-        # Case 1: City changed, geo_location unchanged 
-        # assign random geo_location in new city
-        if city_changed and not geo_changed:
-            try:
-                cleaned_data['geo_location'] = city.get_random_location_point()
-            except Exception:
-                self.add_error('city', users_messages['COULD_NOT_GENERATE_LOCATION_FOR_CITY'])
-
-        # Case 2: geo_location changed, city unchanged 
-        # auto-assign city based on point
-        elif geo_changed and not city_changed:
-            if not country.geom.contains(geo_data):
-                self.add_error('geo_location', users_messages['LOCATION_OUTSIDE_COUNTRY'])
+            # User Didn't change his Geo Locatio nor his City
+            else:
                 return cleaned_data
-            try:
-                actual_city = City.objects.get(geom__contains=geo_data)
-                cleaned_data['city'] = actual_city
-            except City.DoesNotExist:
-                self.add_error('geo_location', users_messages['LOCATION_UNKNOWN_CITY'])
-            except City.MultipleObjectsReturned:
-                cleaned_data['city'] = City.objects.filter(geom__contains=geo_data).first()
-
-        # Case 3: both changed 
-        # validate point in country and in selected city
-        elif geo_changed and city_changed:
-            if not country.geom.contains(geo_data):
-                self.add_error('geo_location', users_messages['LOCATION_OUTSIDE_COUNTRY'])
-                return cleaned_data
-
-            if not city.geom.contains(geo_data):
-                try:
-                    actual_city = City.objects.get(geom__contains=geo_data)
-                    self.add_error('city', users_messages['LOCATION_OUTSIDE_CITY'] % {
-                        'actual': actual_city.name,
-                        'selected': city.name
-                    })
-                except City.DoesNotExist:
-                    self.add_error('geo_location', users_messages['LOCATION_UNKNOWN_CITY'])
-
-        return cleaned_data
