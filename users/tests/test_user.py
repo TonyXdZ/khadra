@@ -332,7 +332,7 @@ class UserTestCase(TestCase):
 
     def test_update_user_profile(self):
         """
-        Signup and create profile normally WITH profile picture
+        Update user profile
         """
         sign_up_response = self.client_1.post( reverse('account_signup'),
                                 {
@@ -342,12 +342,12 @@ class UserTestCase(TestCase):
                                  'password2': 'qsdf654654',
                                 }, 
                              )
-        #Verify email address
+        # Verify email address
         verify_email_address('tobe_updated@gmail.com')
 
         test_image_file = create_test_image()
 
-        #Login the user since he logged out unil email is verified
+        # Login the user since he logged out unil email is verified
         self.client_1.post(reverse('account_login'), {'login': 'tobe_updated', 'password': 'qsdf654654'})
         profile_response = self.client_1.post( reverse('create-profile'), 
                                         {'profile_pic': test_image_file,
@@ -360,8 +360,9 @@ class UserTestCase(TestCase):
 
         #Profile update part
         profile_response = self.client_1.post( reverse('profile-update'), 
-                                        {'profile_pic-clear': 'on',#clears the profile pic field
+                                        {'profile_pic-clear': 'on',# Clears the profile pic field
                                         'account_type': 'manager',
+                                        'city': str(self.annaba_city.pk),
                                         'bio': 'new bio', 
                                         'phone_number': '0666778866',
                                         'username': 'already_updated',
@@ -375,6 +376,182 @@ class UserTestCase(TestCase):
         self.assertEqual( updated_user.first_name , 'Happy')
         self.assertEqual( updated_user.last_name , 'User')
         self.assertEqual( updated_user.profile.bio, 'new bio')
-        self.assertEqual( updated_user.profile.account_type, 'manager')#Might change in the future
+        self.assertEqual( updated_user.profile.account_type, 'manager')# DEFINITLY will change
         self.assertEqual( updated_user.profile.phone_number, '+213666778866')
         self.assertEqual( updated_user.profile.profile_pic, '' )
+
+    def test_update_user_profile_change_city_only(self):
+        """
+        Update the user profile with only changing the city
+        The expected result is a new city and new geo_location
+        in the selected city (Assigned randomly within the city)
+        """
+        sign_up_response = self.client_1.post( reverse('account_signup'),
+                                {
+                                 'username':'tobe_updated', 
+                                 'email': 'tobe_updated@gmail.com',
+                                 'password1': 'qsdf654654',
+                                 'password2': 'qsdf654654',
+                                }, 
+                             )
+        # Verify email address
+        verify_email_address('tobe_updated@gmail.com')
+
+        # Login the user since he logged out unil email is verified
+        self.client_1.post(reverse('account_login'), {'login': 'tobe_updated', 'password': 'qsdf654654'})
+        profile_response = self.client_1.post( reverse('create-profile'), 
+                                        {
+                                        'account_type': 'volunteer',
+                                        'bio': 'ssup', 
+                                        'phone_number': '0666778855',
+                                        'city': str(self.annaba_city.pk),
+                                        })
+
+        # Profile update part
+        oran_city = City.objects.get(name='Oran')
+
+        profile_response = self.client_1.post( reverse('profile-update'), 
+                                        {'city': str(oran_city.pk),# New city and no geo_location
+                                        'username':'tobe_updated',# Required field in user form
+                                        'phone_number': '0666778855',# Required field in profile form
+                                        })
+              
+
+        updated_user = UserModel.objects.get(username='tobe_updated')
+
+        self.assertEqual( updated_user.profile.city, oran_city)
+        
+        is_contained = City.objects.filter(
+            id=oran_city.id,
+            geom__contains=updated_user.profile.geo_location
+        ).exists()
+
+        self.assertTrue(is_contained, "The profile's location should be within the selected city")
+
+    def test_update_user_profile_change_geo_location_only(self):
+        """
+        Update the user profile with only changing the geo_location
+        The expected result is a new city based on the selected location point
+        and new geo_location
+        """
+        sign_up_response = self.client_1.post( reverse('account_signup'),
+                                {
+                                 'username':'tobe_updated', 
+                                 'email': 'tobe_updated@gmail.com',
+                                 'password1': 'qsdf654654',
+                                 'password2': 'qsdf654654',
+                                }, 
+                             )
+        # Verify email address
+        verify_email_address('tobe_updated@gmail.com')
+
+        # Login the user since he logged out unil email is verified
+        self.client_1.post(reverse('account_login'), {'login': 'tobe_updated', 'password': 'qsdf654654'})
+        profile_response = self.client_1.post( reverse('create-profile'), 
+                                        {
+                                        'account_type': 'volunteer',
+                                        'bio': 'ssup', 
+                                        'phone_number': '0666778855',
+                                        'city': str(self.annaba_city.pk),
+                                        })
+
+        # Profile update part
+        oran_city = City.objects.get(name='Oran')
+        point_in_oran_city = oran_city.geom.centroid
+
+        profile_response = self.client_1.post( reverse('profile-update'), 
+                                        {'geo_location': str(point_in_oran_city),# New geo_location in another city
+                                        'city': str(self.annaba_city.pk),# Unchanged city
+                                        'username':'tobe_updated', # Required field in user form
+                                        'phone_number': '0666778855',# Required field in profile form
+                                        })
+              
+        updated_user = UserModel.objects.get(username='tobe_updated')
+
+        self.assertEqual( updated_user.profile.city, oran_city)
+        self.assertEqual( updated_user.profile.geo_location, point_in_oran_city)
+
+    def test_update_user_profile_change_geo_location_and_city(self):
+        """
+        Update the user profile with changing the geo_location and city
+        The expected result is a new city based on the selected location point
+        and new geo_location at the exact point where user selected
+        """
+        sign_up_response = self.client_1.post( reverse('account_signup'),
+                                {
+                                 'username':'tobe_updated', 
+                                 'email': 'tobe_updated@gmail.com',
+                                 'password1': 'qsdf654654',
+                                 'password2': 'qsdf654654',
+                                }, 
+                             )
+        # Verify email address
+        verify_email_address('tobe_updated@gmail.com')
+
+        # Login the user since he logged out unil email is verified
+        self.client_1.post(reverse('account_login'), {'login': 'tobe_updated', 'password': 'qsdf654654'})
+        profile_response = self.client_1.post( reverse('create-profile'), 
+                                        {
+                                        'account_type': 'volunteer',
+                                        'bio': 'ssup', 
+                                        'phone_number': '0666778855',
+                                        'city': str(self.annaba_city.pk),
+                                        })
+
+        # Profile update part
+        alger_city = City.objects.get(name='Alger')
+        point_in_alger_city = alger_city.geom.centroid
+
+        profile_response = self.client_1.post( reverse('profile-update'), 
+                                        {'geo_location': str(point_in_alger_city),# New geo_location
+                                        'city': str(alger_city.pk),# New city
+                                        'username':'tobe_updated', # Required field in user form
+                                        'phone_number': '0666778855',# Required field in profile form
+                                        })
+              
+        updated_user = UserModel.objects.get(username='tobe_updated')
+
+        self.assertEqual( updated_user.profile.city, alger_city)
+        self.assertEqual( updated_user.profile.geo_location, point_in_alger_city)
+
+    def test_update_user_profile_change_geo_location_outside_the_country(self):
+        """
+        Update the user profile with changing the geo_location outside the country
+        the expected result is form error 
+        """
+        sign_up_response = self.client_1.post( reverse('account_signup'),
+                                {
+                                 'username':'tobe_updated', 
+                                 'email': 'tobe_updated@gmail.com',
+                                 'password1': 'qsdf654654',
+                                 'password2': 'qsdf654654',
+                                }, 
+                             )
+        # Verify email address
+        verify_email_address('tobe_updated@gmail.com')
+
+        # Login the user since he logged out unil email is verified
+        self.client_1.post(reverse('account_login'), {'login': 'tobe_updated', 'password': 'qsdf654654'})
+        profile_response = self.client_1.post( reverse('create-profile'), 
+                                        {
+                                        'account_type': 'volunteer',
+                                        'bio': 'ssup', 
+                                        'phone_number': '0666778855',
+                                        'city': str(self.annaba_city.pk),
+                                        })
+
+        # Profile update part
+        alger_city = City.objects.get(name='Alger')
+        point_in_germany = 'SRID=4326;POINT (9.851 51.11)'
+        
+        profile_response = self.client_1.post( reverse('profile-update'), 
+                                        {'geo_location': point_in_germany,
+                                        'city': str(alger_city.pk),
+                                        'username':'tobe_updated', # Required field in user form
+                                        'phone_number': '0666778855',# Required field in profile form
+                                        })
+        
+        updated_user = UserModel.objects.get(username='tobe_updated')
+
+        self.assertEqual( updated_user.profile.city, self.annaba_city)# Remains un changed
+        self.assertContains( profile_response, users_messages['LOCATION_OUTSIDE_COUNTRY'])
