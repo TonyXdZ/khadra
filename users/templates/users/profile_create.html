@@ -6,50 +6,7 @@
 {% block css %}
 {{ block.super }}
 {% leaflet_css plugins="forms" %}
-<style>
-    /* Custom toggle switch styling */
-    .location-toggle {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 1.5rem;
-    }
-    .toggle-btn {
-        padding: 0.75rem 1.5rem;
-        background-color: #e9ecef;
-        border: 1px solid #ced4da;
-        cursor: pointer;
-        transition: all 0.3s;
-        font-weight: 500;
-    }
-    .toggle-btn:first-child {
-        border-radius: 0.25rem 0 0 0.25rem;
-        border-right: none;
-    }
-    .toggle-btn:last-child {
-        border-radius: 0 0.25rem 0.25rem 0;
-        border-left: none;
-    }
-    .toggle-btn.active {
-        background-color: #28a745;
-        color: white;
-        border-color: #28a745;
-        z-index: 1;
-        position: relative;
-    }
-    .toggle-input {
-        position: absolute;
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-    .hidden-by-opacity {
-        opacity: 0;
-        pointer-events: none;
-        height: 0;
-        overflow: hidden;
-        transition: opacity 0.3s ease, height 0.3s ease;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/location_toggle.css' %}">
 {% endblock css %}
 {% block content %}
 <div class="container">
@@ -114,36 +71,6 @@
 
 {% block scripts %}
 {{ block.super }}
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const geoField = document.getElementById('geo-location-field');
-    const cityField = document.getElementById('city-field');
-    const geoBtn = document.getElementById('geo-btn');
-    const cityBtn = document.getElementById('city-btn');
-
-    function toggleFields() {
-        const selected = document.querySelector('input[name="location_type"]:checked').value;
-        if (selected === 'geo') {
-            geoField.classList.remove('hidden-by-opacity');
-            cityField.classList.add('hidden-by-opacity');
-
-            geoBtn.classList.add('active');
-            cityBtn.classList.remove('active');
-
-        } else {
-            geoField.classList.add('hidden-by-opacity');
-            cityField.classList.remove('hidden-by-opacity');
-
-            cityBtn.classList.add('active');
-            geoBtn.classList.remove('active');
-        }
-    }
-
-    geoBtn.addEventListener('click', toggleFields);
-    cityBtn.addEventListener('click', toggleFields);
-
-    toggleFields(); // Initial call
-});
-</script>
+<script src="{% static 'js/location_toggle.js' %}"></script>
 {% leaflet_js plugins="forms" %}
 {% endblock scripts %}
