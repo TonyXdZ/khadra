@@ -100,7 +100,7 @@
 {% if messages %}
   <div class="container mt-3">
     {% for message in messages %}
-      <div class="alert alert-{{ message.tags|default:'info' }}" role="alert" dir="auto">
+      <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %}" role="alert" dir="auto">
         {{ message }}
       </div>
     {% endfor %}
