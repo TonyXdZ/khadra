@@ -1,8 +1,8 @@
 from django.urls import reverse
 from django.core.exceptions import ValidationError
-from django.utils.translation import gettext as _
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.models import EmailAddress
+from users.messages import users_messages
 
 class KhadraAccountAdapter(DefaultAccountAdapter):
 
@@ -23,7 +23,7 @@ class KhadraAccountAdapter(DefaultAccountAdapter):
         Prevent duplicate emails even if ACCOUNT_UNIQUE_EMAIL fails
         """
         if EmailAddress.objects.filter(email=email).exists():
-            raise ValidationError(_("This email is already in use by another account."))
+            raise ValidationError(users_messages['EMAIL_NOT_UNIQUE'])
         return email
     
     def clean_email(self, email):

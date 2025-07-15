@@ -60,5 +60,8 @@ users_messages = {
     'LOCATION_UNKNOWN_CITY': _('Location not within any known city'),
     'LOCATION_OUTSIDE_CITY' : _('Location is in %(actual)s, not %(selected)s'),
     'COULD_NOT_GENERATE_LOCATION_FOR_CITY': _('Could not generate location for selected city'),
-    'SELECT_CITY_OR_LOCATION': _('Please select either a location on the map or a city')
+    'SELECT_CITY_OR_LOCATION': _('Please select either a location on the map or a city'),
+
+    # adapter
+    'EMAIL_NOT_UNIQUE': _('This email is already in use by another account.')
 }
