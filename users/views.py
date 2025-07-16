@@ -29,6 +29,7 @@ class ProfileCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         form.instance.user = self.request.user
         profile = form.save(commit=False)
         profile.country = Country.objects.get(iso2='DZ')
+        profile.account_type = 'volunteer'
         profile.save()
         messages.success( self.request, users_messages['ACCOUNT_CREATED_SUCCESS'])
         return super().form_valid(form)

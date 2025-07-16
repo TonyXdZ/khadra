@@ -25,7 +25,6 @@ class ProfileCreationForm(ModelForm):
     class Meta:
         model = Profile
         fields = ['profile_pic', 
-                  'account_type', 
                   'phone_number', 
                   'bio', 
                   'city', 
@@ -113,7 +112,6 @@ class ProfileUpdateForm(ModelForm):
     class Meta:
         model = Profile
         fields = ['profile_pic', 
-                  'account_type', 
                   'phone_number', 
                   'bio', 
                   'city', 
