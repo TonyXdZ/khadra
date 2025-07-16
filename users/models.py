@@ -110,7 +110,7 @@ class Profile(models.Model):
     
     geo_location = models.PointField(verbose_name=_('Geolocation'), srid=4326, null=True, blank=True)
 
-    account_type = models.CharField(_('Account type'), max_length=100, choices=ACCOUNT_TYPE_CHOICES, blank=True, null=True)
+    account_type = models.CharField(_('Account type'), max_length=100, choices=ACCOUNT_TYPE_CHOICES, default='volunteer')
     
     #Original size profile pic
     profile_pic = models.ImageField(_("Profile picture"), default=None, upload_to='profile_pics', blank=True, null=True)
