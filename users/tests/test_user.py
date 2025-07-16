@@ -65,7 +65,7 @@ class UserTestCase(TestCase):
         #Login the user since he logged out unil email is verified
         self.client_1.post(reverse('account_login'), {'login': 'charoufa', 'password': 'qsdf654654'})
         profile_response = self.client_1.post( reverse('create-profile'), 
-                                        {'account_type': 'volunteer',
+                                        {
                                         'bio': 'ssup', 
                                         'phone_number': '0666778855',
                                         'city': str(self.annaba_city.pk),
@@ -101,7 +101,6 @@ class UserTestCase(TestCase):
         self.client_1.post(reverse('account_login'), {'login': 'charoufa', 'password': 'qsdf654654'})
         profile_response = self.client_1.post( reverse('create-profile'), 
                                         {'profile_pic': test_image_file,
-                                        'account_type': 'volunteer',
                                         'bio': 'ssup', 
                                         'phone_number': '0666778855',
                                         'city': str(self.annaba_city.pk),
@@ -165,8 +164,7 @@ class UserTestCase(TestCase):
         #Login the user since he logged out unil email is verified
         self.client_1.post(reverse('account_login'), {'login': 'no_redirect_user', 'password': 'qsdf654654'})
         profile_response = self.client_1.post( reverse('create-profile'), 
-                                        {'account_type': 'volunteer',
-                                        'bio': 'ssup', 
+                                        {'bio': 'ssup', 
                                         'phone_number': '0666778855',
                                         'city': str(self.annaba_city.pk),
                                         })
@@ -191,8 +189,7 @@ class UserTestCase(TestCase):
         self.client_1.post(reverse('account_login'), {'login': 'outside_country', 'password': 'qsdf654654'})
 
         point_in_germany = 'SRID=4326;POINT (9.851 51.11)'
-        profile_create_data = {'account_type': 'volunteer',
-                                'bio': 'ssup', 
+        profile_create_data = { 'bio': 'ssup', 
                                 'phone_number': '0666778855',
                                 'geo_location': point_in_germany,}
 
@@ -220,8 +217,7 @@ class UserTestCase(TestCase):
 
         point_in_oran_city = City.objects.get(name='Oran').geom.centroid
         
-        profile_create_data = {'account_type': 'volunteer',
-                                'bio': 'ssup', 
+        profile_create_data = { 'bio': 'ssup', 
                                 'phone_number': '0666778855',
                                 'city': str(self.annaba_city.pk),# Annaba city selected
                                 'geo_location': str(point_in_oran_city),} # Location in Oran city
@@ -250,8 +246,7 @@ class UserTestCase(TestCase):
 
         point_in_oran_city = City.objects.get(name='Oran').geom.centroid
         
-        profile_create_data = {'account_type': 'volunteer',
-                                'bio': 'ssup', 
+        profile_create_data = { 'bio': 'ssup', 
                                 'phone_number': '0666778855',
                                 'city': str(self.annaba_city.pk),# Annaba city selected
                                 'geo_location': str(self.point_in_annaba),} # Location in Annaba city
@@ -281,8 +276,7 @@ class UserTestCase(TestCase):
 
         point_in_oran_city = City.objects.get(name='Oran').geom.centroid
         
-        profile_create_data = {'account_type': 'volunteer',
-                                'bio': 'ssup', 
+        profile_create_data = { 'bio': 'ssup', 
                                 'phone_number': '0666778855',
                                 'geo_location': str(self.point_in_annaba),} # Location in Annaba city
 
@@ -311,8 +305,7 @@ class UserTestCase(TestCase):
 
         point_in_oran_city = City.objects.get(name='Oran').geom.centroid
         
-        profile_create_data = {'account_type': 'volunteer',
-                                'bio': 'ssup', 
+        profile_create_data = { 'bio': 'ssup', 
                                 'phone_number': '0666778855',
                                 'city': str(self.annaba_city.pk)}# Annaba city selected
 
@@ -351,7 +344,6 @@ class UserTestCase(TestCase):
         self.client_1.post(reverse('account_login'), {'login': 'tobe_updated', 'password': 'qsdf654654'})
         profile_response = self.client_1.post( reverse('create-profile'), 
                                         {'profile_pic': test_image_file,
-                                        'account_type': 'volunteer',
                                         'bio': 'ssup', 
                                         'phone_number': '0666778855',
                                         'city': str(self.annaba_city.pk),
@@ -361,7 +353,6 @@ class UserTestCase(TestCase):
         #Profile update part
         profile_response = self.client_1.post( reverse('profile-update'), 
                                         {'profile_pic-clear': 'on',# Clears the profile pic field
-                                        'account_type': 'manager',
                                         'city': str(self.annaba_city.pk),
                                         'bio': 'new bio', 
                                         'phone_number': '0666778866',
@@ -376,7 +367,6 @@ class UserTestCase(TestCase):
         self.assertEqual( updated_user.first_name , 'Happy')
         self.assertEqual( updated_user.last_name , 'User')
         self.assertEqual( updated_user.profile.bio, 'new bio')
-        self.assertEqual( updated_user.profile.account_type, 'manager')# DEFINITLY will change
         self.assertEqual( updated_user.profile.phone_number, '+213666778866')
         self.assertEqual( updated_user.profile.profile_pic, '' )
 
@@ -401,7 +391,6 @@ class UserTestCase(TestCase):
         self.client_1.post(reverse('account_login'), {'login': 'tobe_updated', 'password': 'qsdf654654'})
         profile_response = self.client_1.post( reverse('create-profile'), 
                                         {
-                                        'account_type': 'volunteer',
                                         'bio': 'ssup', 
                                         'phone_number': '0666778855',
                                         'city': str(self.annaba_city.pk),
@@ -449,7 +438,6 @@ class UserTestCase(TestCase):
         self.client_1.post(reverse('account_login'), {'login': 'tobe_updated', 'password': 'qsdf654654'})
         profile_response = self.client_1.post( reverse('create-profile'), 
                                         {
-                                        'account_type': 'volunteer',
                                         'bio': 'ssup', 
                                         'phone_number': '0666778855',
                                         'city': str(self.annaba_city.pk),
@@ -492,7 +480,6 @@ class UserTestCase(TestCase):
         self.client_1.post(reverse('account_login'), {'login': 'tobe_updated', 'password': 'qsdf654654'})
         profile_response = self.client_1.post( reverse('create-profile'), 
                                         {
-                                        'account_type': 'volunteer',
                                         'bio': 'ssup', 
                                         'phone_number': '0666778855',
                                         'city': str(self.annaba_city.pk),
@@ -533,9 +520,7 @@ class UserTestCase(TestCase):
         # Login the user since he logged out unil email is verified
         self.client_1.post(reverse('account_login'), {'login': 'tobe_updated', 'password': 'qsdf654654'})
         profile_response = self.client_1.post( reverse('create-profile'), 
-                                        {
-                                        'account_type': 'volunteer',
-                                        'bio': 'ssup', 
+                                        {'bio': 'ssup', 
                                         'phone_number': '0666778855',
                                         'city': str(self.annaba_city.pk),
                                         })
@@ -600,7 +585,6 @@ class UserTestCase(TestCase):
                         password='qsdflkjlkj',
                         phone_number='+213555447766', 
                         bio='Some good bio',
-                        account_type='volunteer',
                         city=self.annaba_city,
                         geo_location=self.point_in_annaba,
                         )
@@ -610,7 +594,6 @@ class UserTestCase(TestCase):
                 password='qsdflkjlkj',
                 phone_number='+213555447755', 
                 bio='Some good bio',
-                account_type='volunteer',
                 city=self.annaba_city,
                 geo_location=self.point_in_annaba,
                 )
