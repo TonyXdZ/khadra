@@ -555,3 +555,74 @@ class UserTestCase(TestCase):
 
         self.assertEqual( updated_user.profile.city, self.annaba_city)# Remains un changed
         self.assertContains( profile_response, users_messages['LOCATION_OUTSIDE_COUNTRY'])
+
+    def test_sign_up_with_an_email_already_in_use(self):
+        """
+        Signup with an email already in use
+        expected result is an error message and no user created
+        """
+        sign_up_response = self.client_1.post( reverse('account_signup'),
+                                {
+                                 'username':'charoufa', 
+                                 'email': 'achref@gmail.com',
+                                 'password1': 'qsdf654654',
+                                 'password2': 'qsdf654654',
+                                }, 
+                             )
+        # Verify email address
+        verify_email_address('achref@gmail.com')
+        
+        # Attemt to create another user with the same email
+        sign_up_response_with_error = self.client_2.post( reverse('account_signup'),
+                                {
+                                 'username':'different_username', 
+                                 'email': 'achref@gmail.com',
+                                 'password1': 'qsdf654654',
+                                 'password2': 'qsdf654654',
+                                }, 
+                             )
+        
+        new_user_with_duplicate_email = UserModel.objects.filter(username='different_username').exists()
+
+        self.assertContains( sign_up_response_with_error, users_messages['EMAIL_NOT_UNIQUE'])
+        self.assertEqual(new_user_with_duplicate_email, False )
+
+    def test_add_email_already_in_use(self):
+        """
+        Signup normally then add an email in use
+        in manage emails page
+
+        expected result is an error message and no emails added
+        """
+
+        user_1 = create_new_user(email='somedude@gmail.com',
+                        username='some_dude',
+                        password='qsdflkjlkj',
+                        phone_number='+213555447766', 
+                        bio='Some good bio',
+                        account_type='volunteer',
+                        city=self.annaba_city,
+                        geo_location=self.point_in_annaba,
+                        )
+        
+        user_2 = create_new_user(email='anotherdude@gmail.com',
+                username='another_dude',
+                password='qsdflkjlkj',
+                phone_number='+213555447755', 
+                bio='Some good bio',
+                account_type='volunteer',
+                city=self.annaba_city,
+                geo_location=self.point_in_annaba,
+                )
+        
+        # Login user 2
+        self.client_1.login(username='another_dude', password='qsdflkjlkj')
+        
+        # Attempt to add already in use email
+        add_email_response = self.client_1.post(reverse('account_email'), 
+                            {'email': 'somedude@gmail.com', 'action_add': ''})
+
+        user_2_emails = user_2.emailaddress_set.all().count()
+        
+        self.assertContains( add_email_response, users_messages['EMAIL_NOT_UNIQUE'])
+        self.assertEqual(user_2_emails, 1 )
