@@ -609,3 +609,63 @@ class UserTestCase(TestCase):
         
         self.assertContains( add_email_response, users_messages['EMAIL_NOT_UNIQUE'])
         self.assertEqual(user_2_emails, 1 )
+
+    def test_get_public_profile_of_other_user(self):
+        """
+        Get public profile of another user
+        expected result is 200 http response
+        and username of that user somewhere in the page
+        """
+        user_1 = create_new_user(email='curious_user@gmail.com',
+                                username='curious',
+                                password='qsdflkjlkj',
+                                account_type='volunteer',
+                                phone_number='+213555447755', 
+                                bio='Some good bio',
+                                city=self.annaba_city,
+                                geo_location=self.point_in_annaba,
+                                )
+
+        user_2 = create_new_user(email='dummy_user@gmail.com',
+                                username='dummy',
+                                password='qsdflkjlkj',
+                                account_type='volunteer',
+                                phone_number='+213555441155', 
+                                bio='',
+                                city=self.annaba_city,
+                                geo_location=self.point_in_annaba,
+                                )
+        self.client_1.login(username='curious', password='qsdflkjlkj')
+
+        public_profile_response = self.client_1.get(
+                    reverse('public-profile', 
+                    kwargs={'username': 'dummy'})
+                    )
+        self.assertEqual(public_profile_response.status_code, 200)
+        self.assertContains(public_profile_response, 'dummy')
+
+    def test_get_my_public_profile_redirects_to_profile(self):
+        """
+        Get my public profile by typing my username in the path
+        expected result is redirect to 'profile' page
+        """
+        user_1 = create_new_user(email='curious_user@gmail.com',
+                                username='curious',
+                                password='qsdflkjlkj',
+                                account_type='volunteer',
+                                phone_number='+213555447755', 
+                                bio='Some good bio',
+                                city=self.annaba_city,
+                                geo_location=self.point_in_annaba,
+                                )
+
+        self.client_1.login(username='curious', password='qsdflkjlkj')
+
+        public_profile_response = self.client_1.get(
+                    reverse('public-profile', 
+                    kwargs={'username': 'curious'}),
+                    follow=True,
+                    )
+        
+        redirected_to = public_profile_response.request['PATH_INFO']
+        self.assertEqual(redirected_to, reverse('profile'))
