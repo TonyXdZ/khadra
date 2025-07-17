@@ -1,0 +1,86 @@
+{% extends "core/base.html" %}
+{% load i18n static %}
+{% block title %}{{ user.username }} - {% trans "Profile in Khadra" %}{% endblock title %}
+
+{% block content %}
+<section class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+
+      <!-- Profile Header -->
+        
+        <div class="text-center bg-light mb-4">
+        {% if user.profile.profile_pic %}
+          <a href="{{ user.profile.profile_pic.url }}">
+            <img src="{{ user.profile.profile_pic_256.url }}" class="img-thumbnail rounded-circle shadow-lg p-3">
+          </a>
+        {% endif %}
+        <div class="text-center mb-4 mt-4">
+        <div class="d-inline-flex flex-column align-items-center">
+          <div class="d-flex align-items-end">
+            <h4 class="mb-0">{{ user.username }}</h4>
+            {% if user.profile.account_type == "volunteer" %}
+              <span class="badge badge-success ml-2 align-self-center py-1 px-2">
+                <i class="fas fa-seedling mr-1"></i> {% trans "Volunteer" %}
+              </span>
+            {% elif user.profile.account_type == "manager" %}
+              <span class="badge badge-info ml-2 align-self-center py-1 px-2">
+                <i class="fas fa-user-tie mr-1"></i> {% trans "Manager" %}
+              </span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+    {% if user.first_name or user.last_name %}
+      <p class="lead text-dark">
+        {{ user.first_name }} {{ user.last_name }}
+      </p>
+    {% endif %}
+    {% if user.profile.bio %}
+    <p class="text-muted font-italic mt-3 mb-3">
+      <i class="fas fa-quote-left mr-1 text-secondary"></i>{{ user.profile.bio }}
+    </p>
+    {% endif %}
+  </div>
+
+      <!-- Basic Info -->
+      <section class="card mb-4 shadow">
+        <div class="card-body">
+          <h2 class="h5 mb-4 text-center text-dark">
+            <i class="fas fa-info-circle mr-2"></i> {% trans "Profile Information" %}
+          </h2>
+
+          <p class="mb-3 text-center">
+            <i class="fas fa-city text-info mr-2"></i>
+            <strong>{% trans "City" %}:</strong> {{ user.profile.city.name }}
+          </p>
+
+        </div>
+      </section>
+
+      <!-- Tree Planting Activity -->
+      <section class="card mb-4 shadow">
+        <div class="card-body">
+          <h2 class="h5 mb-3 text-center">{% trans "Tree-Planting Activity" %}</h2>
+          <h3 class="h6 mt-4">{% trans "Contributions by Location" %}</h3>
+          <ul class="list-group list-group-flush">
+              <li class="list-group-item text-muted">
+                {% trans "No planting records available." %}
+              </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Future Features -->
+      <section class="card shadow">
+        <div class="card-body">
+          <h2 class="h5 mb-3 text-center">{% trans "Coming Soon" %}</h2>
+          <p class="text-muted text-center">{% trans "Badges, achievements, and community impact will be displayed here." %}</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,14 +1,16 @@
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 from django.views.generic.edit import CreateView
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, DetailView
 from users.models import Profile, Country, City
 from users.forms import ProfileCreationForm, UserUpdateForm, ProfileUpdateForm
 from users.messages import users_messages
 
+UserModel = get_user_model()
 
 class ProfileCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Profile
@@ -71,3 +73,22 @@ class ProfileUpdateView(LoginRequiredMixin, TemplateView):
             'user_form': user_form,
             'profile_form': profile_form
         })
+
+class PublicProfileView(LoginRequiredMixin, TemplateView):
+    template_name = 'users/public_profile.html'
+    model = UserModel
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data( ** kwargs)
+        user = get_object_or_404( UserModel, username=kwargs['username'] )
+
+        if user == self.request.user:
+            return redirect('profile')
+        else:
+            return render(request, self.template_name, context )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = get_object_or_404( UserModel, username=kwargs['username'] )     
+        context['user'] = user
+        return context
