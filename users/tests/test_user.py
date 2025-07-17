@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
+from django.core import mail
 from allauth.account.models import EmailAddress
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
@@ -669,3 +670,34 @@ class UserTestCase(TestCase):
         
         redirected_to = public_profile_response.request['PATH_INFO']
         self.assertEqual(redirected_to, reverse('profile'))
+
+    def test_forget_password_workflow(self):
+       
+        """
+        Tests the password reset workflow
+        
+        Ensures:
+        - Users can initiate password reset process 
+        without errors from the adapter
+        - Redirects to account_password_rest_done view
+        - Rest email was sent to user
+        """
+
+        user = create_new_user(email='weak_memory@gmail.com',
+                        username='weak_memory_user',
+                        password='qsdflkjlkj',
+                        account_type='volunteer',
+                        phone_number='+213555447755', 
+                        bio='Some good bio',
+                        city=self.annaba_city,
+                        geo_location=self.point_in_annaba,
+                        )
+        forget_pass_response = self.client_1.post(
+                    reverse('account_reset_password'),
+                    {'email': 'weak_memory@gmail.com'},
+                    follow=True)
+        
+        redirected_to = forget_pass_response.request['PATH_INFO']
+
+        self.assertEqual(redirected_to, reverse('account_reset_password_done'))
+        self.assertEqual(len(mail.outbox), 1)
