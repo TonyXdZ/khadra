@@ -23,6 +23,13 @@ class KhadraAccountAdapter(DefaultAccountAdapter):
         Prevent duplicate emails even if ACCOUNT_UNIQUE_EMAIL fails
         """
         if EmailAddress.objects.filter(email=email).exists():
+            # Get the current request context
+            request = self.request
+
+            # Allow if it's a password reset request
+            if request.path == reverse('account_reset_password'):
+                return email
+            
             raise ValidationError(users_messages['EMAIL_NOT_UNIQUE'])
         return email
     
