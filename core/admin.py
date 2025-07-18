@@ -1,3 +1,5 @@
 from django.contrib import admin
+from leaflet.admin import LeafletGeoAdmin
+from core.models import Initiative
 
-# Register your models here.
+admin.site.register(Initiative, LeafletGeoAdmin)
