@@ -1,0 +1,91 @@
+{% extends "core/base.html" %}
+{% load static i18n crispy_forms_tags leaflet_tags %}
+{% get_current_language as LANGUAGE_CODE %}
+{% block title %}{% trans "Create an initiative in Khadra" %}{% endblock title %}
+{% block css %}
+{{ block.super }}
+{% leaflet_css plugins="forms" %}
+{% endblock css %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="text-center mt-4 mb-4">{% trans "Create New Initiative" %}</h2>
+            <!-- Important Notes Section -->
+            <div class="card border-info mb-4">
+                <div class="card-header bg-info text-white" id="notesHeading">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link text-white font-weight-bold w-100 text-left d-flex justify-content-between align-items-center" 
+                                type="button" 
+                                data-toggle="collapse" 
+                                data-target="#notesCollapse" 
+                                aria-expanded="true" 
+                                aria-controls="notesCollapse">
+                            <span>{% trans "Important Notes Before Submission" %}</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="notesCollapse" class="collapse show" aria-labelledby="notesHeading">
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <i class="fas fa-exclamation-circle text-primary mr-2"></i>
+                                {% trans "All initiatives must comply with Khadra community guidelines" %}
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-exclamation-circle text-primary mr-2"></i>
+                                {% trans "Location must be accurate" %}
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-exclamation-circle text-primary mr-2"></i>
+                                {% trans "The scheduled date must be at least a week in advance" %}
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-exclamation-circle text-primary mr-2"></i>
+                                {% trans "Choose a weekend date to get as much volunteers as possible" %}
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-exclamation-circle text-primary mr-2"></i>
+                                {% trans "Provide as much information as you can about the initiative" %}
+                            </li>
+                        </ul>
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <i class="fas fa-lightbulb mr-2"></i>
+                            {% trans "Review all details carefully before submission." %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Important Notes Section -->
+            <div class="form-container m-3 m-md-4 m-lg-5"> <!-- Responsive margins -->
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <!-- Submit Button -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                    <button type="submit" class="btn btn-success btn-lg px-5">{% trans "Create" %}</button>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block scripts %}
+{{ block.super }}
+{% leaflet_js plugins="forms" %}
+<script>
+// Add rotation to chevron icon when collapsing
+$(document).ready(function() {
+    $('#notesCollapse').on('show.bs.collapse', function() {
+        $(this).prev().find('.fa-chevron-down').css('transform', 'rotate(0deg)');
+    });
+    
+    $('#notesCollapse').on('hide.bs.collapse', function() {
+        $(this).prev().find('.fa-chevron-down').css('transform', 'rotate(180deg)');
+    });
+});
+</script>
+{% endblock scripts %}

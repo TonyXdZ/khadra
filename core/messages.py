@@ -24,4 +24,8 @@ core_messages = {
     # forms
     'DATE_IN_THE_PAST': _('Invalid date. Please schedule your initiative in the future.'),
     'DATE_TOO_CLOSE': _('Invalid date. Please schedule your initiative at least one week in advance.'),
+
+    # views
+    'MANAGERS_ONLY' : _('You have to be a manager to create initiatives.'),
+    'INITIATIVE_CREATED_SUCCESS': _('Your initiative has been created successfully.')
 }
