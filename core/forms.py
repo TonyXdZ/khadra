@@ -1,11 +1,13 @@
 from django.contrib.gis import forms
-from django.forms import ModelForm
+from django.forms import ModelForm, DateTimeInput
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from leaflet.forms.widgets import LeafletWidget
-from users.models import Country, City
+from users.models import Country
 from core.models import Initiative
 from users.messages import users_messages
-from django.forms import DateTimeInput
+from core.messages import core_messages
+
 
 
 LEAFLET_WIDGET_ATTRS = {
@@ -43,3 +45,14 @@ class InitiativeCreationForm(ModelForm):
         if not country.geom.contains(geo_location):
             raise forms.ValidationError(users_messages['LOCATION_OUTSIDE_COUNTRY'])
         return geo_location
+    
+    def clean_scheduled_datetime(self):
+        date_time = self.cleaned_data['scheduled_datetime']
+        
+        # User selected a date in the past
+        if date_time < timezone.now():
+            raise forms.ValidationError(core_messages['DATE_IN_THE_PAST'])
+        else:
+            if date_time - timezone.now() < timezone.timedelta(days=7):
+                raise forms.ValidationError(core_messages['DATE_TOO_CLOSE'])
+        return date_time
