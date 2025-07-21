@@ -9,12 +9,14 @@ from users.models import City
 class Initiative(models.Model):
 
     STATUS_CHOICES = [
+        ('under_review', _('Under Review')),
         ('upcoming', _('Upcoming')),
         ('ongoing', _('Ongoing')),
         ('completed', _('Completed')),
+        ('review_failed',  _('Review Failed')),
         ('cancelled', _('Cancelled')),
     ]
-    status = models.CharField(_('Status'), max_length=20, choices=STATUS_CHOICES, default='upcoming')
+    status = models.CharField(_('Status'), max_length=20, choices=STATUS_CHOICES, default='under_review')
 
     info = models.TextField(_('Information'), blank=True, help_text=_('Additional information about the intiative like requests or notes.'))
     city = models.ForeignKey(City, verbose_name=_('City'), on_delete=models.SET_NULL, null=True, blank=True)
