@@ -32,5 +32,6 @@ class CreateInitiativeView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         geo_location = form.instance.geo_location
         # Assign City instance automatically from given geo_location
         form.instance.city = City.objects.get(geom__contains=geo_location)
+        form.instance.created_by = self.request.user
         messages.success( self.request, core_messages['INITIATIVE_CREATED_SUCCESS'])
         return super().form_valid(form)
