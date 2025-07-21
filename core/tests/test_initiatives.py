@@ -100,6 +100,7 @@ class InitiativesTestCase(TestCase):
 
         self.assertEqual( get_response.status_code, 200)
         self.assertEqual( new_initiative.city, self.annaba_city)
+        self.assertEqual( new_initiative.created_by, manage_user)
         self.assertEqual( created_initiatives.count(), 1)
 
     def test_create_initiative_with_geo_location_outside_the_country(self):
