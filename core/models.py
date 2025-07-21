@@ -47,7 +47,9 @@ class Initiative(models.Model):
     )
     
     date_created = models.DateTimeField(_('Date created'), default=timezone.now)
-    
+
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,verbose_name=_('Created by'), related_name='initiatives')
+
     def __str__(self):
         return f"initiative {self.pk}"
 
