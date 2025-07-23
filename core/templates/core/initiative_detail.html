@@ -1,0 +1,141 @@
+{% extends "core/base.html" %}
+{% load static i18n leaflet_tags %}
+{% get_current_language as LANGUAGE_CODE %}
+{% block title %}{% trans "Initiative in Khadra" %}{% endblock title %}
+
+{% block css %}
+{{ block.super }}
+{% leaflet_css %}
+<style>
+    .status-badge {
+        font-size: 1.1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+    }
+    .volunteer-progress {
+        height: 30px;
+        font-size: 1.1rem;
+    }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header with Status -->
+            <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
+                <h2 class="mb-0">{% blocktrans with initiative_pk=initiative.pk%}Initiative number {{ initiative_pk }}{% endblocktrans %}</h2>
+                <span class="status-badge badge 
+                    {% if initiative.status == 'under_review' %}badge-warning
+                    {% elif initiative.status == 'upcoming' %}badge-info
+                    {% elif initiative.status == 'ongoing' %}badge-success
+                    {% elif initiative.status == 'canceled' %}badge-danger
+                    {% else %}badge-secondary{% endif %}">
+                    <i class="fas 
+                        {% if initiative.status == 'under_review' %}fa-hourglass-half
+                        {% elif initiative.status == 'upcoming' %}fa-calendar-check
+                        {% elif initiative.status == 'ongoing' %}fa-play-circle
+                        {% elif initiative.status == 'canceled' %}fa-times-circle
+                        {% else %}fa-exclamation-triangle{% endif %} mr-1"></i>
+                    {{ initiative.get_status_display }}
+                </span>
+            </div>
+
+            <!-- Creator Info -->
+            <div class="media border p-3 mb-4 rounded">
+                <img src="{{ initiative.created_by.profile.profile_pic_64.url }}" 
+                     alt="{% trans 'Profile picture' %}" 
+                     class="mr-3 rounded-circle"
+                     style="width:64px; height:64px">
+                <div class="media-body">
+                    <h5 class="mt-0">{% trans "Created by" %}</h5>
+                    <p class="mb-0">{{ initiative.created_by.username }}</p>
+                    <small class="text-muted">
+                        {% trans "Posted" %} {{ initiative.date_created }}
+                    </small>
+                </div>
+            </div>
+
+            <!-- Initiative Details -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-city mr-2"></i> {% trans "City" %}</h5>
+                            <p class="ml-4">{{ initiative.city }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-clock mr-2"></i> {% trans "Duration" %}</h5>
+                            <p class="ml-4">
+                                {{ initiative.duration_days }} 
+                                {% blocktrans count days=initiative.duration_days %}day{% plural %}days{% endblocktrans %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <h5><i class="fas fa-calendar-alt mr-2"></i> {% trans "Scheduled Date & Time" %}</h5>
+                    <p class="ml-4">
+                        {{ initiative.scheduled_datetime|date:"l, F j, Y" }}<br>
+                        {{ initiative.scheduled_datetime|time:"g:i A" }}
+                    </p>
+                    
+                    <h5 class="mt-4"><i class="fas fa-info-circle mr-2"></i> {% trans "Description" %}</h5>
+                    <p class="ml-4">{{ initiative.info|linebreaks }}</p>
+                </div>
+            </div>
+
+            <!-- Map Section -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-map-marker-alt mr-2"></i> {% trans "Location" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% leaflet_map "initiativemap" callback="window.map_init" %}
+                </div>
+            </div>
+            {% if initiative.status == 'upcoming' %}
+            <!-- Volunteers Progress -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-users mr-2"></i> {% trans "Volunteers" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="progress volunteer-progress mb-3">
+                        <div class="progress-bar bg-success" 
+                            role="progressbar" 
+                            style="width: {{ volunteers_percentage }}%;"
+                            aria-valuenow="{{ joined_volunteers_count }}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="{{ initiative.required_volunteers }}">
+                            {{ volunteers_percentage }}%
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <h4>
+                            {% blocktrans with required_volunteers=initiative.required_volunteers %}
+                            {{ joined_volunteers_count }} (Joined) / {{ required_volunteers }} (Required)
+                           {% endblocktrans %}
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+{{ block.super }}
+{% leaflet_js %}
+<script>
+function map_init(map, options) {
+    // Add initiative location marker
+    const point = [{{ initiative.geo_location.y }}, {{ initiative.geo_location.x }}];
+    L.marker(point).addTo(map)
+        .bindPopup("{{ initiative.city }}")
+        .openPopup();
+}
+</script>
+{% endblock scripts %}
