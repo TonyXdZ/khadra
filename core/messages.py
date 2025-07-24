@@ -27,5 +27,7 @@ core_messages = {
 
     # views
     'MANAGERS_ONLY' : _('You have to be a manager to create initiatives.'),
-    'INITIATIVE_CREATED_SUCCESS': _('Your initiative has been created successfully.')
+    'INITIATIVE_CREATED_SUCCESS': _('Your initiative has been created successfully.'),
+    'MANAGER_REVIEWED_ALREADY': _('You reviewed this initiative already.'),
+    'INITIATIVE_NOT_UNDER_REVIEW': _('This initiative is no longer under review.')
 }

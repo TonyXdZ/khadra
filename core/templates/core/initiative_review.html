@@ -1,0 +1,152 @@
+{% extends "core/base.html" %}
+{% load static i18n leaflet_tags crispy_forms_tags %}
+{% get_current_language as LANGUAGE_CODE %}
+{% block title %}{% trans "Initiative review in Khadra" %}{% endblock title %}
+
+{% block css %}
+{{ block.super }}
+{% leaflet_css %}
+{% endblock css %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <h2 class="text-center mt-4 mb-4">
+                {% blocktrans with initiative_pk=initiative.pk %}Initiative number {{ initiative_pk }} review{% endblocktrans %}
+            </h2>
+
+            <!-- Creator Info Card -->
+            <div class="card mb-4">
+                <div class="card-header"> <!-- Removed color classes -->
+                    <h5 class="mb-0"><i class="fas fa-user mr-2"></i> {% trans "Initiative Creator" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="media">
+                        <img src="{{ initiative.created_by.profile.profile_pic_64.url }}"
+                             alt="{% trans 'Profile picture' %}"
+                             class="mr-3 rounded-circle"
+                             style="width:64px; height:64px;">
+                        <div class="media-body">
+                            <h5 class="mt-0 mb-1">
+                                <a href="{% url 'public-profile' initiative.created_by.username %}" class="text-dark">
+                                    {{ initiative.created_by.get_full_name|default:initiative.created_by.username }}
+                                </a>
+                            </h5>
+                            <ul class="list-unstyled mb-0">
+                                <li><i class="fas fa-envelope mr-2 text-muted"></i> {{ initiative.created_by.email }}</li>
+                                <li><i class="fas fa-phone mr-2 text-muted"></i> {{ initiative.created_by.profile.phone_number.as_national }}</li>
+                                <li><i class="fas fa-calendar-plus mr-2 text-muted"></i> {% trans "Joined :" %} {{ initiative.created_by.date_joined|date }}</li>
+                                <!-- Add more user details if needed -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Initiative Details Card -->
+            <div class="card mb-4">
+                <div class="card-header"> <!-- Removed color classes -->
+                    <h5 class="mb-0"><i class="fas fa-tree mr-2"></i> {% trans "Initiative Details" %}</h5>
+                </div>
+                <div class="card-body">
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-city mr-2 text-muted"></i> {% trans "City" %}</h6>
+                            <p class="ml-4">{{ initiative.city }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-clock mr-2 text-muted"></i> {% trans "Duration" %}</h6>
+                            <p class="ml-4">
+                                {{ initiative.duration_days }}
+                                {% blocktrans count days=initiative.duration_days %}day{% plural %}days{% endblocktrans %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <h6><i class="fas fa-calendar-alt mr-2 text-muted"></i> {% trans "Scheduled Date & Time" %}</h6>
+                    <p class="ml-4">
+                        {{ initiative.scheduled_datetime|date:"l, F j, Y" }}<br>
+                        {{ initiative.scheduled_datetime|time:"g:i A" }}
+                    </p>
+
+                    <h6 class="mt-4"><i class="fas fa-info-circle mr-2 text-muted"></i> {% trans "Description" %}</h6>
+                    <div class="ml-4">{{ initiative.info|linebreaks }}</div>
+
+                     {% if initiative.status == 'upcoming' %}
+                    <!-- Volunteers Progress Card -->
+                    <div class="card mt-4 border-secondary">
+                        <div class="card-header"> <!-- Removed color classes -->
+                            <h6 class="mb-0"><i class="fas fa-users mr-2 text-muted"></i> {% trans "Volunteers" %}</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="progress volunteer-progress mb-3">
+                                <div class="progress-bar bg-success"
+                                    role="progressbar"
+                                    style="width: {{ volunteers_percentage }}%;"
+                                    aria-valuenow="{{ joined_volunteers_count }}"
+                                    aria-valuemin="0"
+                                    aria-valuemax="{{ initiative.required_volunteers }}">
+                                    {{ volunteers_percentage }}%
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <h6>
+                                    {% blocktrans with required_volunteers=initiative.required_volunteers %}
+                                    {{ joined_volunteers_count }} (Joined) / {{ required_volunteers }} (Required)
+                                    {% endblocktrans %}
+                                </h6>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </div> <!-- End card-body -->
+            </div> <!-- End Initiative Details Card -->
+
+            <!-- Map Section Card -->
+            <div class="card mb-4">
+                <div class="card-header"> <!-- Removed color classes -->
+                    <h5 class="mb-0"><i class="fas fa-map-marker-alt mr-2"></i> {% trans "Location" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% leaflet_map "initiativemap" callback="window.map_init" %}
+                </div>
+            </div>
+
+            <!-- Review Form Card -->
+            <div class="card mb-4">
+                <div class="card-header"> <!-- Removed color classes -->
+                    <h5 class="mb-0"><i class="fas fa-vote-yea mr-2"></i> {% trans "Your Review" %}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-dark">{% trans "Please read all the information carefully before you submit your review" %}</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <!-- Render the form using crispy forms -->
+                       {{ review_form|crispy }}
+                        <button type="submit" class="btn btn-success">{% trans "Submit Review" %}</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+{{ block.super }}
+{% leaflet_js %}
+<script>
+    function map_init(map, options) {
+        // Add initiative location marker
+        const point = [{{ initiative.geo_location.y }}, {{ initiative.geo_location.x }}];
+        L.marker(point).addTo(map)
+            .bindPopup("{{ initiative.city }}")
+            .openPopup();
+    }
+</script>
+{% endblock scripts %}

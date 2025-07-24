@@ -1,11 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 from django.views.generic.edit import CreateView
 from django.views.generic.detail import DetailView
 from django.views.generic import TemplateView
-from core.forms import InitiativeCreationForm
+from core.forms import InitiativeCreationForm, InitiativeReviewForm
 from core.models import Initiative
 from core.messages import core_messages
 from users.models import Profile, City
@@ -52,3 +53,60 @@ class InitiativeDetails(LoginRequiredMixin, DetailView):
         context["joined_volunteers_count"] = joined_volunteers_count
         context["volunteers_percentage"] = volunteers_percentage
         return context
+
+class InitiativeReviewView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    template_name = 'core/initiative_review.html'
+    model = Initiative
+
+    def test_func(self):
+        """
+        Determines if the current user can access the review view for the initiative.
+        Managers can review initiatives that are 'under_review' and haven't reviewed yet.
+        """
+        initiative = self.get_object()
+
+        # 1. Check if the initiative is in the correct status
+        if initiative.status != 'under_review':
+            self.permission_denied_message = core_messages['INITIATIVE_NOT_UNDER_REVIEW']
+            return False
+
+        # 2. Check if the user is a manager
+        if self.request.user.profile.account_type != 'manager':
+            self.permission_denied_message = core_messages['MANAGERS_ONLY']
+            return False
+
+        # 3. Check if the manager has already reviewed this initiative
+        existing_review = initiative.reviews.filter(manager=self.request.user).first()
+        if existing_review:
+            self.permission_denied_message = core_messages['MANAGER_REVIEWED_ALREADY']
+            return False
+
+        # If all checks pass, grant access
+        return True
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add the review form to the context for GET requests
+        context['review_form'] = InitiativeReviewForm() # Pass initial data if needed
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object() # Get the initiative instance
+        form = InitiativeReviewForm(self.request.POST)
+
+        # Optional: Add checks here if the user is eligible to review this initiative
+        # e.g., if request.user.is_manager and request.user not in self.object.volunteers.all()...
+
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.initiative = self.object # Associate with the current initiative
+            review.manager = self.request.user   # Associate with the current logged-in user (manager)
+            review.save()
+            messages.success(request, _("Your review has been submitted successfully. Thanks!"))
+            # Redirect to the detail page
+            return redirect('initiative-detail', pk=self.object.pk)
+        else:
+            # If the form is invalid, re-render the detail view with the form errors
+            context = self.get_context_data()
+            context['review_form'] = form # Pass the invalid form back to the template
+            return self.render_to_response(context)
