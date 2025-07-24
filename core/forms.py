@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from leaflet.forms.widgets import LeafletWidget
 from users.models import Country
-from core.models import Initiative
+from core.models import Initiative, InitiativeReview
 from users.messages import users_messages
 from core.messages import core_messages
 
@@ -56,3 +56,10 @@ class InitiativeCreationForm(ModelForm):
             if date_time - timezone.now() < timezone.timedelta(days=7):
                 raise forms.ValidationError(core_messages['DATE_TOO_CLOSE'])
         return date_time
+
+
+class InitiativeReviewForm(ModelForm):
+    
+    class Meta:
+        model = InitiativeReview
+        fields = ['vote']

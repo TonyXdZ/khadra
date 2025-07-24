@@ -64,3 +64,33 @@ class Initiative(models.Model):
         if not self.end_datetime and self.scheduled_datetime:
             return self.scheduled_datetime + timezone.timedelta(days=self.duration_days)
         return self.end_datetime
+
+
+class InitiativeReview(models.Model):
+    VOTE_CHOICES = [
+        ('approve', _('Approve')),
+        ('reject',  _('Reject')),
+    ]
+    initiative = models.ForeignKey(
+        Initiative,
+        on_delete=models.SET_NULL,
+        related_name='reviews',
+        verbose_name=_('Initiative'),
+        null=True,
+    )
+    manager = models.ForeignKey(User,
+        on_delete=models.SET_NULL,
+        related_name='initiative_reviews',
+        verbose_name=_('Manager'),
+        null=True,
+    )
+    vote = models.CharField(_('Vote'), max_length=7, choices=VOTE_CHOICES)
+    date_reviewed = models.DateTimeField(_('Date Reviewed'), default=timezone.now)
+
+    class Meta:
+        unique_together = ('initiative', 'manager')
+        verbose_name = _('Initiative Review')
+        verbose_name_plural = _('Initiatives Reviews')
+
+    def __str__(self):
+        return f"initiative {self.pk} review"
