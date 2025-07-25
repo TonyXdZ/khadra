@@ -52,6 +52,14 @@ class InitiativeDetails(LoginRequiredMixin, DetailView):
         context["joined_volunteers"] = joined_volunteers
         context["joined_volunteers_count"] = joined_volunteers_count
         context["volunteers_percentage"] = volunteers_percentage
+        
+        # Check if user has reviewed
+        user_has_reviewed = False
+        if self.request.user.is_authenticated and hasattr(self.request.user, 'profile') and self.request.user.profile.account_type == 'manager':
+            # Check if a review exists for this initiative by this user
+            user_has_reviewed = initiative.reviews.filter(manager=self.request.user).exists()
+
+        context['user_has_reviewed'] = user_has_reviewed
         return context
 
 class InitiativeReviewView(LoginRequiredMixin, UserPassesTestMixin, DetailView):

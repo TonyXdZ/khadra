@@ -41,6 +41,26 @@
                     {{ initiative.get_status_display }}
                 </span>
             </div>
+            <hr>
+            <!-- Conditional Review Section -->
+            {% if user.is_authenticated and user.profile.account_type == 'manager' and initiative.status == 'under_review' %}
+            <div class="text-center mb-4">
+                {% if user_has_reviewed %}
+                    <p class="text-success">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        {% trans "You have already submitted your review for this initiative." %}
+                    </p>
+                {% else %}
+                    <p class="text-muted">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        {% trans "Manager reviews are crucial for initiatives to proceed. Please review the details carefully and submit your decision." %}
+                    </p>
+                    <a href="{% url 'initiative-review' initiative.pk %}" class="btn btn-success btn-lg">
+                        <i class="fas fa-vote-yea mr-2"></i> {% trans "Review Initiative" %}
+                    </a>
+                {% endif %}
+            </div>
+            {% endif %}
 
             <!-- Creator Info -->
             <div class="media border p-3 mb-4 rounded">
