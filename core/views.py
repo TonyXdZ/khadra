@@ -83,7 +83,12 @@ class InitiativeReviewView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
             self.permission_denied_message = core_messages['MANAGERS_ONLY']
             return False
 
-        # 3. Check if the manager has already reviewed this initiative
+        # 3. Check if the user is the creator of the initiative
+        if self.request.user == initiative.created_by:
+            self.permission_denied_message = core_messages['USER_IS_INITIATIVE_CREATOR']
+            return False
+
+        # 4. Check if the manager has already reviewed this initiative
         existing_review = initiative.reviews.filter(manager=self.request.user).first()
         if existing_review:
             self.permission_denied_message = core_messages['MANAGER_REVIEWED_ALREADY']
