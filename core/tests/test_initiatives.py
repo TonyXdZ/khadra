@@ -202,3 +202,154 @@ class InitiativesTestCase(TestCase):
         self.assertContains( post_response, core_messages['DATE_TOO_CLOSE'])
         self.assertEqual( created_initiatives, 0)
 
+    def test_initiative_review_can_be_created_by_manager(self):
+        """
+        Verify that initiatives reviews can be created by users
+        with account type of manager.
+        """
+        manage_user = create_new_user(email='manage_user@gmail.com',
+                                    username='manage_user',
+                                    password='qsdflkjlkj',
+                                    phone_number='+213555447766', 
+                                    bio='Some good bio',
+                                    account_type='manager',
+                                    city=self.annaba_city,
+                                    geo_location=self.point_in_annaba,
+                                    )
+        # Reviewer has to be manager account type
+        reviewer_user = create_new_user(email='reviewer_user@gmail.com',
+                                    username='reviewer_user',
+                                    password='qsdflkjlkj',
+                                    phone_number='+213555447766', 
+                                    bio='Some good bio',
+                                    account_type='manager',
+                                    city=self.annaba_city,
+                                    geo_location=self.point_in_annaba,
+                                    )
+
+        self.client_1.login(username='manage_user', password='qsdflkjlkj')
+        self.client_2.login(username='reviewer_user', password='qsdflkjlkj')
+
+        date_scheduled = timezone.now() + timezone.timedelta(days=8)
+        
+        # Create initiative by manager
+        post_response = self.client_1.post(reverse('create-initiative'),
+                                        {
+                                            'geo_location': str(self.point_in_annaba),
+                                            'info': 'we need equipments transportation',
+                                            'required_volunteers': '30',
+                                            'scheduled_datetime': date_scheduled.strftime('%d/%m/%Y %H:%M'),
+                                            'duration_days': '1',
+                                        })
+        initiative = Initiative.objects.all().first()
+
+        review_url = reverse('initiative-review', kwargs={'pk': str(initiative.pk)})
+        
+        # Get review view as a manager
+        get_review_response = self.client_1.get(review_url)
+
+        # Post a review as reviewer
+        post_review_response = self.client_2.post(review_url, {'vote': 'approve'})
+        
+        reviews_created = initiative.reviews.all().count()
+        
+        self.assertEqual(reviews_created, 1)
+
+    def test_initiative_review_restricted_for_volunteers(self):
+        """
+        Verify that initiatives reviews cannot be accessed by users
+        with account type of volunteer.
+        """
+        manage_user = create_new_user(email='manage_user@gmail.com',
+                                    username='manage_user',
+                                    password='qsdflkjlkj',
+                                    phone_number='+213555447766', 
+                                    bio='Some good bio',
+                                    account_type='manager',
+                                    city=self.annaba_city,
+                                    geo_location=self.point_in_annaba,
+                                    )
+
+        volunteer_user = create_new_user(email='volunteer_user@gmail.com',
+                                    username='volunteer_user',
+                                    password='qsdflkjlkj',
+                                    phone_number='+213555447766', 
+                                    bio='Some good bio',
+                                    account_type='volunteer',
+                                    city=self.annaba_city,
+                                    geo_location=self.point_in_annaba,
+                                    )
+
+        self.client_1.login(username='manage_user', password='qsdflkjlkj')
+        self.client_2.login(username='volunteer_user', password='qsdflkjlkj')
+        date_scheduled = timezone.now() + timezone.timedelta(days=8)
+        
+        # Create initiative by manager
+        post_response = self.client_1.post(reverse('create-initiative'),
+                                        {
+                                            'geo_location': str(self.point_in_annaba),
+                                            'info': 'we need equipments transportation',
+                                            'required_volunteers': '30',
+                                            'scheduled_datetime': date_scheduled.strftime('%d/%m/%Y %H:%M'),
+                                            'duration_days': '1',
+                                        })
+        initiative = Initiative.objects.all().first()
+        
+        review_url = reverse('initiative-review', kwargs={'pk': str(initiative.pk)})
+        # Get initiative review by volunteer
+        get_review_response = self.client_2.get(review_url)
+        
+        # Post a review as volunteer
+        post_review_response = self.client_2.post(review_url, {'vote': 'reject'})
+        
+        reviews_created = initiative.reviews.all().count()
+        
+        self.assertEqual(get_review_response.status_code, 403)
+        self.assertEqual(post_review_response.status_code, 403)
+        self.assertEqual(reviews_created, 0)
+
+    def test_initiative_review_restricted_for_the_creator(self):
+        """
+        Verify that managers can't review their own initiatives.
+        """
+        manage_user = create_new_user(email='manage_user@gmail.com',
+                                    username='manage_user',
+                                    password='qsdflkjlkj',
+                                    phone_number='+213555447766', 
+                                    bio='Some good bio',
+                                    account_type='manager',
+                                    city=self.annaba_city,
+                                    geo_location=self.point_in_annaba,
+                                    )
+
+        
+
+        self.client_1.login(username='manage_user', password='qsdflkjlkj')
+        
+        date_scheduled = timezone.now() + timezone.timedelta(days=8)
+        
+        # Create initiative by manager
+        post_response = self.client_1.post(reverse('create-initiative'),
+                                        {
+                                            'geo_location': str(self.point_in_annaba),
+                                            'info': 'we need equipments transportation',
+                                            'required_volunteers': '30',
+                                            'scheduled_datetime': date_scheduled.strftime('%d/%m/%Y %H:%M'),
+                                            'duration_days': '1',
+                                        })
+        initiative = Initiative.objects.all().first()
+        
+        review_url = reverse('initiative-review', kwargs={'pk': str(initiative.pk)})
+        
+        # Get initiative review as the initiative creator
+        get_review_response = self.client_1.get(review_url)
+
+        # Post a review as the initiative creator
+        post_review_response = self.client_1.post(review_url, {'vote': 'approve'})
+        
+        reviews_created = initiative.reviews.all().count()
+        
+        self.assertEqual(get_review_response.status_code, 403)
+        self.assertEqual(post_review_response.status_code, 403)
+        self.assertEqual(reviews_created, 0)
+        
