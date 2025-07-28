@@ -3,9 +3,9 @@
 # Exit on any error
 set -e
 
+# --- PostrgeSQL Check ---
 echo "Waiting for PostgreSQL to be available..."
 
-# Python-based DB availability check
 python << END
 import socket
 import time
@@ -22,8 +22,29 @@ while True:
 END
 
 echo "✅ PostgreSQL is available. Continuing..."
+# --- End PostrgeSQL Check ---
+# --- Redis Check ---
+echo "Waiting for Redis to be available..."
 
-# Run migrations and collect static files
+python << END
+import socket
+import time
+
+host = "redis"       # container service name for Redis (in docker-compose.yml)
+port = 6379          # default Redis port
+
+while True:
+    try:
+        socket.create_connection((host, port), timeout=1).close()
+        break
+    except OSError:
+        time.sleep(1)
+END
+
+echo "✅ Redis is available."
+# --- End Redis Check ---
+
+# Run migrations
 echo "Running migrations..."
 python manage.py migrate
 

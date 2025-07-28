@@ -11,6 +11,14 @@ services:
     ports:
       - "5433:5432"
 
+  redis:
+    image: redis:7-alpine
+    container_name: khadra_redis
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+
   web:
     build: .
     container_name: khadra_app
@@ -21,8 +29,22 @@ services:
       - "8000:8000"
     depends_on:
       - db
+      - redis
+    env_file:
+      - .env.dev
+
+  celery_worker:
+    build: .
+    container_name: khadra_celery_worker
+    command: celery -A khadra worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
     env_file:
       - .env.dev
 
 volumes:
   postgres_data:
+  redis_data:
