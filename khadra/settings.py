@@ -214,3 +214,8 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
+
+# Initiative configs
+
+INITIATIVE_REVIEW_DURATION = 7 # The initiative will be under review for 7 days
+MIN_INITIATIVE_REVIEWS_REQUIRED = 5 # Minimum required reviews (votes)

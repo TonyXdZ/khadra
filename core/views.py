@@ -1,7 +1,11 @@
+from datetime import timedelta
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.generic.edit import CreateView
 from django.views.generic.detail import DetailView
@@ -9,6 +13,7 @@ from django.views.generic import TemplateView
 from core.forms import InitiativeCreationForm, InitiativeReviewForm
 from core.models import Initiative
 from core.messages import core_messages
+from core.tasks import evaluate_initiative_reviews_task
 from users.models import Profile, City
 from users.messages import users_messages
 
@@ -37,6 +42,9 @@ class CreateInitiativeView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         form.instance.city = City.objects.get(geom__contains=geo_location)
         form.instance.created_by = self.request.user
         messages.success( self.request, core_messages['INITIATIVE_CREATED_SUCCESS'])
+        # Schedule initiaitve reviews evaluation task
+        eta_time = timezone.now() + timedelta(days=settings.INITIATIVE_REVIEW_DURATION)
+        evaluate_initiative_reviews_task.apply_async(args=[form.instance.id], eta=eta_time)  
         return super().form_valid(form)
 
 class InitiativeDetails(LoginRequiredMixin, DetailView):
