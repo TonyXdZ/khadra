@@ -1,10 +1,13 @@
+from django.utils import timezone
 from django.core.management import call_command
 from django.test import Client, TestCase
 from users.models import City
 from users.tests.test_utils import create_new_user
 from core.models import Initiative
 from core.tests.test_utils import create_initiative, create_multiple_initiative_reviews
-from core.tasks import evaluate_initiative_reviews_task
+from core.tasks import (evaluate_initiative_reviews_task, 
+                        transition_initiative_to_ongoing_task, 
+                        transition_initiative_to_completed_task)
 
 
 
@@ -146,4 +149,46 @@ class CeleryTasksTestCase(TestCase):
         # Refresh the instance
         initiative.refresh_from_db()
         self.assertEqual( initiative.status, 'upcoming')
+    
+    def test_status_transition_schedule_to_ongoing_after_evaluation(self):
+        """
+        Tests that an initiative status is marked as 'ongoing'
+        at initiative scheduled datetime.
+        """
+        initiative = create_initiative(created_by=self.initiative_creator,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba,
+                                        scheduled_datetime=timezone.now())
+        initiative.status = 'upcoming'
+        initiative.save()
+        transition_initiative_to_ongoing_task(initiative_id=initiative.id)
+        
+        # Refresh the instance
+        initiative.refresh_from_db()
+        self.assertEqual( initiative.status, 'ongoing')
+
+    def test_status_transition_schedule_to_completed(self):
+        """
+        Tests that an initiative status is marked as 'completed' 
+        at initiative end time.
+        """
+        # Default initiative duration is 1 day we set the scheduled datetime
+        # to yesterday to mimic real life initiatives
+        yesterday = timezone.now() - timezone.timedelta(days=1)
+        
+        initiative = create_initiative(created_by=self.initiative_creator,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba,
+                                        scheduled_datetime=yesterday)
+        initiative.status = 'ongoing'
+        initiative.save()
+        transition_initiative_to_completed_task(initiative_id=initiative.id)
+        
+        # Refresh the instance
+        initiative.refresh_from_db()
+        self.assertEqual( initiative.status, 'completed')
+
+    
         
