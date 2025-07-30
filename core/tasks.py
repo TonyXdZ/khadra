@@ -41,16 +41,82 @@ def evaluate_initiative_reviews_task(initiative_id):
         if total_reviews < settings.MIN_INITIATIVE_REVIEWS_REQUIRED:
             initiative.status = 'review_failed'
         # Approved by majority or reviews are equal -> change status to 'upcoming'
-        # TODO: Schedule next status (ongoing then completed)
         elif approve_count >= refuse_count:
             initiative.status = 'upcoming'
             initiative.save()
+            # Schedule transition to 'ongoing' at the initiative's scheduled start time
+            if initiative.scheduled_datetime > timezone.now():
+                transition_initiative_to_ongoing_task.apply_async(
+                    args=[initiative.id],
+                    eta=initiative.scheduled_datetime
+                )
+
+            # Schedule transition to 'completed' at the initiative's calculated end time
+            # Ensure get_end_datetime() returns a timezone-aware datetime
+            end_datetime = initiative.get_end_datetime()
+            if end_datetime and end_datetime > timezone.now():
+                transition_initiative_to_completed_task.apply_async(
+                    args=[initiative.id],
+                    eta=end_datetime
+                )
+            
         # More rejects than approves -> review failed
         else:
             initiative.status = 'review_failed'
  
         initiative.save()
         
+    except Initiative.DoesNotExist:
+        # Missing initiative do nothing
+        pass
+
+
+@shared_task
+def transition_initiative_to_ongoing_task(initiative_id):
+    """
+    Transitions an initiative's status to 'ongoing'.
+
+    This task is intended to be scheduled to run at the initiative's
+    `scheduled_datetime`. It checks if the initiative is still in the
+    'upcoming' status and eligible for transition.
+
+    Args:
+        initiative_id (int): The ID of the Initiative to transition.
+    """
+    try:
+        initiative = Initiative.objects.get(id=initiative_id)
+
+        # Only transition if it's still 'upcoming'
+        if initiative.status == 'upcoming':
+            initiative.status = 'ongoing'
+            initiative.save()
+    
+    except Initiative.DoesNotExist:
+        # Missing initiative do nothing
+        pass
+
+
+@shared_task
+def transition_initiative_to_completed_task(initiative_id):
+    """
+    Transitions an initiative's status to 'completed'.
+
+    This task is intended to be scheduled to run at the initiative's
+    end time (obtained via `initiative.get_end_datetime()`). It checks
+    if the initiative is in 'ongoing' or 'upcoming' status and eligible
+    for completion.
+
+    Args:
+        initiative_id (int): The ID of the Initiative to transition.
+    """
+    try:
+        initiative = Initiative.objects.get(id=initiative_id)
+
+        # Transition if it's 'ongoing' or still 'upcoming' (maybe it started late)
+        if initiative.status in ['ongoing', 'upcoming']:
+            initiative.status = 'completed'
+            initiative.save()
+
     except Initiative.DoesNotExist:
         # Missing initiative do nothing
         pass
