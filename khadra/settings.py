@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'users',
+    'notifications',
     'phonenumber_field',
     'allauth',
     'allauth.account',
