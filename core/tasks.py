@@ -2,6 +2,8 @@ from celery import shared_task
 from django.utils import timezone
 from django.conf import settings
 from core.models import Initiative
+from notifications.signals import initiative_approved_signal
+
 
 @shared_task
 def evaluate_initiative_reviews_task(initiative_id):
@@ -19,10 +21,11 @@ def evaluate_initiative_reviews_task(initiative_id):
         *   If the total number of reviews is less than the required minimum 
             (`settings.MIN_INITIATIVE_REVIEWS_REQUIRED`), the status is set to 'review_failed'.
         *   If the number of 'approve' votes is greater than or equal to'refuse' votes, and the minimum review count
-            is met, the status is set to 'upcoming'. TODO: trigger next status transitions (ongoing, completed)
+            is met, the status is set to 'upcoming'.
         *   In all other cases (e.g., more 'refuse' votes or exactly equal votes), the status is set to 
             'review_failed'.
     4.  Saves the updated initiative status to the database.
+    5. Emit proper custom signal from notifications.signals
 
     This task ensures the review outcome is processed asynchronously, allowing the system to handle 
     potentially large numbers of initiatives and reviews without blocking user interactions or other 
@@ -44,6 +47,8 @@ def evaluate_initiative_reviews_task(initiative_id):
         elif approve_count >= refuse_count:
             initiative.status = 'upcoming'
             initiative.save()
+            # Emit initiative approved signal for notifications
+            initiative_approved_signal.send(sender=Initiative, instance=initiative,)
             # Schedule transition to 'ongoing' at the initiative's scheduled start time
             if initiative.scheduled_datetime > timezone.now():
                 transition_initiative_to_ongoing_task.apply_async(
