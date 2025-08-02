@@ -7,7 +7,8 @@ from django.utils import timezone
 from users.models import Profile, City
 from users.tests.test_utils import create_new_user
 from users.messages import users_messages
-from core.tests.test_utils import create_initiative
+from core.tests.test_utils import create_initiative, create_multiple_initiative_reviews
+from core.tasks import evaluate_initiative_reviews_task
 from notifications.models import Notification
 
 UserModel = get_user_model()
@@ -85,5 +86,32 @@ class NotificationsTestCase(TestCase):
         self.assertTrue(manager_2_notified)
         self.assertFalse(volunteer_not_notified)
         self.assertFalse(creator_not_notified)
+
+    def test_notification_created_on_initiative_approval(self):
+        """
+        Tests that a notification is created when initaitive approved
+        """
+        
+        initiative = create_initiative(created_by=self.initiative_creator,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba)
+
+        create_multiple_initiative_reviews(initiative=initiative,
+                                            num_reviews=10,
+                                            base_username='random',
+                                            vote_type='approve',
+                                            city=self.annaba_city,
+                                            geo_location=self.point_in_annaba)
+        # Run the evaluation task synchronously to get results immediatly
+        evaluate_initiative_reviews_task(initiative_id=initiative.id)
+
+        notification = Notification.objects.filter(notification_type='initiative_approved').first()
+        
+        creator_notified = notification.recipients.contains(self.initiative_creator)
+        
+        self.assertEqual(notification.recipients.count(), 1) # Only 1 users should be notified
+        self.assertEqual(notification.related_initiative, initiative)
+        self.assertTrue(creator_notified)
         
         
