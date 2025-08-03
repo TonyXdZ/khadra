@@ -8,6 +8,8 @@ from notifications.models import Notification
 User = get_user_model()
 
 initiative_approved_signal = Signal()
+initiative_review_failed_signal = Signal()
+
 
 @receiver(post_save, sender=Initiative)
 def notify_managers_initiative_created(sender, instance, created, **kwargs):
@@ -38,5 +40,26 @@ def handle_initiative_approval(sender, instance, **kwargs):
     notification = Notification.objects.create(
         notification_type='initiative_approved',
         related_initiative=instance
+    )
+    notification.recipients.add(instance.created_by)
+
+
+@receiver(initiative_review_failed_signal)
+def handle_initiative_review_failed(sender, instance, reason, **kwargs):
+    """
+    This signal is emitted from core.tasks.evaluate_initiative_reviews_task
+    when the initiative evaluation failed due to lack of reviews or majority
+    of 'reject' reviews by managers.
+
+    Notify the creator of the initiative.
+    
+    Args:
+        reason (str): reason for evaluation failure can be 'lack_of_reviews'
+        or 'rejected_by_managers'.
+    """
+    notification = Notification.objects.create(
+        notification_type='initiative_review_failed',
+        related_initiative=instance,
+        message=reason,
     )
     notification.recipients.add(instance.created_by)

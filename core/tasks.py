@@ -2,7 +2,8 @@ from celery import shared_task
 from django.utils import timezone
 from django.conf import settings
 from core.models import Initiative
-from notifications.signals import initiative_approved_signal
+from notifications.signals import ( initiative_approved_signal,
+                                    initiative_review_failed_signal)
 
 
 @shared_task
@@ -43,6 +44,11 @@ def evaluate_initiative_reviews_task(initiative_id):
         # Not enough reviews -> review failed
         if total_reviews < settings.MIN_INITIATIVE_REVIEWS_REQUIRED:
             initiative.status = 'review_failed'
+            # Emit initiative review failed signal with 'lack_of_reviews' reason
+            initiative_review_failed_signal.send(sender=Initiative, 
+                                                instance=initiative, 
+                                                reason='lack_of_reviews')
+        
         # Approved by majority or reviews are equal -> change status to 'upcoming'
         elif approve_count >= refuse_count:
             initiative.status = 'upcoming'
@@ -68,6 +74,10 @@ def evaluate_initiative_reviews_task(initiative_id):
         # More rejects than approves -> review failed
         else:
             initiative.status = 'review_failed'
+            # Emit initiative review failed signal with 'rejected_by_managers' reason
+            initiative_review_failed_signal.send(sender=Initiative, 
+                                                instance=initiative, 
+                                                reason='rejected_by_managers')
  
         initiative.save()
         
