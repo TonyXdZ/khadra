@@ -8,7 +8,7 @@ from users.models import Profile, City
 from users.tests.test_utils import create_new_user
 from users.messages import users_messages
 from core.tests.test_utils import create_initiative, create_multiple_initiative_reviews
-from core.tasks import evaluate_initiative_reviews_task
+from core.tasks import evaluate_initiative_reviews_task, transition_initiative_to_ongoing_task
 from notifications.models import Notification
 
 UserModel = get_user_model()
@@ -173,4 +173,52 @@ class NotificationsTestCase(TestCase):
         self.assertEqual(notification.related_initiative, initiative)
         self.assertEqual(notification.message, 'rejected_by_managers')
         self.assertTrue(creator_notified)
+        
+    def test_notification_created_on_initiative_started(self):
+        """
+        Tests that a notification is created when initaitive starts.
+        """
+        
+        initiative = create_initiative(created_by=self.initiative_creator,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba,
+                                        scheduled_datetime=timezone.now())
+        
+        volunteer = create_new_user(email='volunteer@gmail.com',
+                                    username='volunteer',
+                                    password='qsdflkjlkj',
+                                    phone_number='+213555447766', 
+                                    bio='Some good bio',
+                                    account_type='volunteer',
+                                    city=self.annaba_city,
+                                    geo_location=self.point_in_annaba,
+                                    )
+        
+        volunteer_2 = create_new_user(email='volunteer_2@gmail.com',
+                                    username='volunteer_2',
+                                    password='qsdflkjlkj',
+                                    phone_number='+213555447766', 
+                                    bio='Some good bio',
+                                    account_type='volunteer',
+                                    city=self.annaba_city,
+                                    geo_location=self.point_in_annaba,
+                                    )
+        # Add volunteers to the instance to verify if they get notified
+        initiative.volunteers.add(volunteer, volunteer_2)
+        initiative.status = 'upcoming'
+        initiative.save()
+        transition_initiative_to_ongoing_task(initiative_id=initiative.id)
+        
+        notification = Notification.objects.filter(notification_type='initiative_started').first()
+        
+        creator_notified = notification.recipients.contains(self.initiative_creator)
+        volunteer_notified = notification.recipients.contains(volunteer)
+        volunteer_2_notified = notification.recipients.contains(volunteer_2)
+        # 3 users should be notified
+        # initiative creator, volunteer, volunteer_2
+        self.assertEqual(notification.recipients.count(), 3)
+        self.assertEqual(notification.related_initiative, initiative)
+        self.assertTrue(volunteer_notified)
+        self.assertTrue(volunteer_2_notified)
         
