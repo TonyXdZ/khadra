@@ -113,5 +113,64 @@ class NotificationsTestCase(TestCase):
         self.assertEqual(notification.recipients.count(), 1) # Only 1 users should be notified
         self.assertEqual(notification.related_initiative, initiative)
         self.assertTrue(creator_notified)
+
+    def test_notification_created_on_initiative_review_failed_lack_of_reviews(self):
+        """
+        Tests that a notification is created when initaitive evaluation failed
+        due to lack of reviews.
+        """
         
+        initiative = create_initiative(created_by=self.initiative_creator,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba)
+
+        create_multiple_initiative_reviews(initiative=initiative,
+                                            num_reviews=1, # Less than minimum required reviews
+                                            base_username='random',
+                                            vote_type='approve',
+                                            city=self.annaba_city,
+                                            geo_location=self.point_in_annaba)
+        
+        # Run the evaluation task synchronously to get results immediatly
+        evaluate_initiative_reviews_task(initiative_id=initiative.id)
+
+        notification = Notification.objects.filter(notification_type='initiative_review_failed').first()
+        
+        creator_notified = notification.recipients.contains(self.initiative_creator)
+        
+        self.assertEqual(notification.recipients.count(), 1) # Only 1 users should be notified
+        self.assertEqual(notification.related_initiative, initiative)
+        self.assertEqual(notification.message, 'lack_of_reviews')
+        self.assertTrue(creator_notified)
+        
+    def test_notification_created_on_initiative_review_failed_rejected_by_majority(self):
+        """
+        Tests that a notification is created when initaitive evaluation failed
+        due to majority of reject reviews.
+        """
+        
+        initiative = create_initiative(created_by=self.initiative_creator,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba)
+
+        create_multiple_initiative_reviews(initiative=initiative,
+                                            num_reviews=10,
+                                            base_username='random',
+                                            vote_type='reject',
+                                            city=self.annaba_city,
+                                            geo_location=self.point_in_annaba)
+        
+        # Run the evaluation task synchronously to get results immediatly
+        evaluate_initiative_reviews_task(initiative_id=initiative.id)
+
+        notification = Notification.objects.filter(notification_type='initiative_review_failed').first()
+        
+        creator_notified = notification.recipients.contains(self.initiative_creator)
+        
+        self.assertEqual(notification.recipients.count(), 1) # Only 1 users should be notified
+        self.assertEqual(notification.related_initiative, initiative)
+        self.assertEqual(notification.message, 'rejected_by_managers')
+        self.assertTrue(creator_notified)
         
