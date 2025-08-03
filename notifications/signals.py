@@ -9,6 +9,7 @@ User = get_user_model()
 
 initiative_approved_signal = Signal()
 initiative_review_failed_signal = Signal()
+initiative_started_signal = Signal()
 
 
 @receiver(post_save, sender=Initiative)
@@ -63,3 +64,22 @@ def handle_initiative_review_failed(sender, instance, reason, **kwargs):
         message=reason,
     )
     notification.recipients.add(instance.created_by)
+
+
+@receiver(initiative_started_signal)
+def handle_initiative_started_signal(sender, instance, **kwargs):
+    """
+    This signal is emitted from core.tasks.transition_initiative_to_ongoing_task
+    when the initiative starts.
+
+    Notify volunteers and initiative creator.
+    """
+    notification = Notification.objects.create(
+        notification_type='initiative_started',
+        related_initiative=instance
+    )
+    volunteers = instance.volunteers.all()
+    notification.recipients.add(instance.created_by)
+
+    if volunteers.exists():
+        notification.recipients.add(*volunteers)

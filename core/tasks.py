@@ -3,7 +3,8 @@ from django.utils import timezone
 from django.conf import settings
 from core.models import Initiative
 from notifications.signals import ( initiative_approved_signal,
-                                    initiative_review_failed_signal)
+                                    initiative_review_failed_signal,
+                                    initiative_started_signal)
 
 
 @shared_task
@@ -105,6 +106,8 @@ def transition_initiative_to_ongoing_task(initiative_id):
         if initiative.status == 'upcoming':
             initiative.status = 'ongoing'
             initiative.save()
+            # Emit initiative started signal for notifications
+            initiative_started_signal.send(sender=Initiative, instance=initiative,)
     
     except Initiative.DoesNotExist:
         # Missing initiative do nothing
