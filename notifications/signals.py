@@ -10,6 +10,7 @@ User = get_user_model()
 initiative_approved_signal = Signal()
 initiative_review_failed_signal = Signal()
 initiative_started_signal = Signal()
+initiative_completed_signal = Signal()
 
 
 @receiver(post_save, sender=Initiative)
@@ -76,6 +77,25 @@ def handle_initiative_started_signal(sender, instance, **kwargs):
     """
     notification = Notification.objects.create(
         notification_type='initiative_started',
+        related_initiative=instance
+    )
+    volunteers = instance.volunteers.all()
+    notification.recipients.add(instance.created_by)
+
+    if volunteers.exists():
+        notification.recipients.add(*volunteers)
+
+
+@receiver(initiative_completed_signal)
+def handle_initiative_completed_signal(sender, instance, **kwargs):
+    """
+    This signal is emitted from core.tasks.transition_initiative_to_completed_task
+    when the initiative is completed.
+
+    Notify volunteers and initiative creator.
+    """
+    notification = Notification.objects.create(
+        notification_type='initiative_completed',
         related_initiative=instance
     )
     volunteers = instance.volunteers.all()

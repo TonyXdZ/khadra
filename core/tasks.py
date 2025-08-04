@@ -4,7 +4,8 @@ from django.conf import settings
 from core.models import Initiative
 from notifications.signals import ( initiative_approved_signal,
                                     initiative_review_failed_signal,
-                                    initiative_started_signal)
+                                    initiative_started_signal,
+                                    initiative_completed_signal)
 
 
 @shared_task
@@ -134,6 +135,8 @@ def transition_initiative_to_completed_task(initiative_id):
         if initiative.status in ['ongoing', 'upcoming']:
             initiative.status = 'completed'
             initiative.save()
+            # Emit initiative completed signal for notifications
+            initiative_completed_signal.send(sender=Initiative, instance=initiative,)
 
     except Initiative.DoesNotExist:
         # Missing initiative do nothing
