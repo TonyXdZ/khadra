@@ -1,0 +1,179 @@
+{% extends "core/base.html" %}
+{% load static i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+{% block title %}{% trans "Notifications in Khadra" %}{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="mb-4 text-center">
+                <i class="fas fa-bell mr-2"></i>
+                {% trans "Notifications" %}
+            </h2>
+            <hr>
+            {% if notifications %}
+                <div class="list-group">
+                    {% for notification in notifications %}
+                        {% if notification.notification_type == 'announcement' %}
+                            <!-- Announcement -->
+                            <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 mt-2 shadow-sm">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="mr-3">
+                                            <i class="fas fa-bullhorn fa-2x text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="mb-1 font-weight-bold text-primary">{% trans "Announcement" %}</h5>
+                                            <p class="mb-1">{{ notification.message }}</p>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="far fa-clock mr-1"></i>
+                                        {{ notification.created_at|date:"M d, Y" }}<br>
+                                        <span class="float-right">{{ notification.created_at|time:"H:i" }}</span>
+                                    </small>
+                                </div>
+                            </div>
+                        {% else %}
+                            <!-- Regular notification - clickable -->
+                            <a href="{% url 'initiative-detail' notification.related_initiative.id %}" 
+                               class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm hover-shadow">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="mr-3">
+                                            {% if notification.notification_type == 'initiative_created' %}
+                                                <i class="fas fa-file-alt fa-2x text-primary"></i>
+                                            {% elif notification.notification_type == 'initiative_approved' %}
+                                                <i class="fas fa-check-circle fa-2x text-success"></i>
+                                            {% elif notification.notification_type == 'initiative_review_failed' %}
+                                                <i class="fas fa-times-circle fa-2x text-danger"></i>
+                                            {% elif notification.notification_type == 'initiative_started' %}
+                                                <i class="fas fa-play-circle fa-2x text-info"></i>
+                                            {% elif notification.notification_type == 'initiative_cancelled' %}
+                                                <i class="fas fa-ban fa-2x text-warning"></i>
+                                            {% elif notification.notification_type == 'initiative_completed' %}
+                                                <i class="fas fa-flag-checkered fa-2x text-success"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <h5 class="mb-1">
+                                                {% blocktrans with initiative_id=notification.related_initiative.id %}
+                                                Initiative number {{ initiative_id }}
+                                                {% endblocktrans %}
+                                            </h5>
+                                            <p class="mb-1">
+                                                {% if notification.notification_type == 'initiative_created' %}
+                                                    {% trans "📋 New initiative needs your expertise! Could you review it when you have a moment?" %}
+                                                {% elif notification.notification_type == 'initiative_approved' %}
+                                                    {% trans "🎉 Congratulations! Your initiative has been approved and is now live!" %}
+                                                {% elif notification.notification_type == 'initiative_review_failed' %}
+                                                    {% if notification.message == 'lack_of_reviews' %}
+                                                        {% trans "⏳ We didn't get enough reviews for your initiative. Could you invite more reviewers?" %}
+                                                    {% elif notification.message == 'rejected_by_managers' %}
+                                                        {% trans "💔 Reviewers didn't approve your initiative this time. Let's refine and resubmit!" %}
+                                                    {% else %}
+                                                        {% trans "⚠️ Review process didn't complete successfully. Let's try again?" %}
+                                                    {% endif %}
+                                                {% elif notification.notification_type == 'initiative_started' %}
+                                                    {% trans "🚀 Your initiative has launched! The journey begins now!" %}
+                                                {% elif notification.notification_type == 'initiative_cancelled' %}
+                                                    {% trans "😢 Unfortunately, this initiative has been cancelled. We appreciate your effort!" %}
+                                                {% elif notification.notification_type == 'initiative_completed' %}
+                                                    {% trans "🏆 Mission accomplished! Your initiative has made a real impact!" %}
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="far fa-clock mr-1"></i>
+                                        {{ notification.created_at|date:"M d, Y" }}<br>
+                                        <span class="float-right">{{ notification.created_at|time:"H:i" }}</span>
+                                    </small>
+                                </div>
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">{% trans "No notifications yet" %}</h4>
+                    <p class="text-muted">{% trans "You'll see notifications here when they arrive." %}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="Notifications pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+{% endif %}
+
+<style>
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-2px);
+    transition: all 0.2s ease-in-out;
+}
+
+.list-group-item {
+    border-radius: 0.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.pagination .page-link {
+    color: #28a745;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+</style>
+{% endblock content %}

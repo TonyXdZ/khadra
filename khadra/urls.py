@@ -6,6 +6,7 @@ from core.views import ( HomeView,
                         CreateInitiativeView, 
                         InitiativeDetails,
                         InitiativeReviewView,)
+from notifications.views import NotificationsListView
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),
@@ -14,7 +15,8 @@ urlpatterns = [
     path('initiative/<pk>/review/', InitiativeReviewView.as_view(), name='initiative-review'),
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
-    path('users/', include('users.urls'))
+    path('users/', include('users.urls')),
+    path('notifications/', NotificationsListView.as_view(), name='notifications-list'),
 ]
 
 if settings.DEBUG:
