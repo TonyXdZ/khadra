@@ -69,20 +69,104 @@
       <div class="dropdown mr-3 position-relative">
         <button class="icon-btn dropdown-toggle" type="button" id="notifDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           <i class="fas fa-bell fa-lg"></i>
-          <span class="badge badge-danger badge-notify">{# notifications count #}</span>
+          {% if user.notifications.count != 0 %}
+          <span class="badge badge-danger badge-notify">{{ user.notifications.count }}</span>
+          {% endif %}
         </button>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="notifDropdown">
-          {% if notifications %}
-            {% for notification in notifications %}
-              <a class="dropdown-item" href="#">{{ notification.message }}</a>
+          
+          <!-- Notifications List -->
+          <div style="max-height: 400px; overflow-y: auto;">
+            {% for notification in user.notifications.all|slice:":10" %}
+              <a class="dropdown-item {% if not notification.is_read %}bg-light{% endif %}" 
+                 href="{% if notification.related_initiative and notification.notification_type != 'announcement' %}
+                          {% url 'initiative-detail' notification.related_initiative.id %}
+                        {% else %}
+                          {% url 'notifications-list' %}
+                        {% endif %}">
+                
+                <div class="d-flex">
+                  <!-- Icon -->
+                  <div class="mr-3 mt-1">
+                    {% if notification.notification_type == 'initiative_created' %}
+                      <i class="fas fa-file-alt text-primary"></i>
+                    {% elif notification.notification_type == 'initiative_approved' %}
+                      <i class="fas fa-check-circle text-success"></i>
+                    {% elif notification.notification_type == 'initiative_review_failed' %}
+                      <i class="fas fa-times-circle text-danger"></i>
+                    {% elif notification.notification_type == 'initiative_started' %}
+                      <i class="fas fa-play-circle text-info"></i>
+                    {% elif notification.notification_type == 'initiative_cancelled' %}
+                      <i class="fas fa-ban text-warning"></i>
+                    {% elif notification.notification_type == 'initiative_completed' %}
+                      <i class="fas fa-flag-checkered text-success"></i>
+                    {% elif notification.notification_type == 'announcement' %}
+                      <i class="fas fa-bullhorn text-primary"></i>
+                    {% endif %}
+                  </div>
+                  
+                  <!-- Content -->
+                  <div class="flex-grow-1">
+                    <div class="font-weight-bold" style="font-size: 0.9rem;">
+                        {% if notification.notification_type == 'announcement' %}
+                          {% trans "Announcement" %}
+                        {% else %}
+                          {% trans "Notification" %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="text-muted small mt-1" style="word-wrap: break-word; white-space: normal; max-width: 400px;">
+                      {% if notification.notification_type == 'initiative_created' %}
+                        {% trans "New initiative needs review" %}
+                      {% elif notification.notification_type == 'initiative_approved' %}
+                        {% trans "Your initiative was approved" %}
+                      {% elif notification.notification_type == 'initiative_review_failed' %}
+                        {% if notification.message == 'lack_of_reviews' %}
+                          {% trans "Insufficient reviews received" %}
+                        {% elif notification.message == 'rejected_by_majority' %}
+                          {% trans "Rejected by majority" %}
+                        {% else %}
+                          {% trans "Review process failed" %}
+                        {% endif %}
+                      {% elif notification.notification_type == 'initiative_started' %}
+                        {% trans "Initiative has started" %}
+                      {% elif notification.notification_type == 'initiative_cancelled' %}
+                        {% trans "Initiative was cancelled" %}
+                      {% elif notification.notification_type == 'initiative_completed' %}
+                        {% trans "Initiative completed" %}
+                      {% elif notification.notification_type == 'announcement' %}
+                        {{ notification.message|truncatewords:8 }}
+                      {% endif %}
+                    </div>
+                    
+                    <div class="text-muted small mt-1">
+                      <i class="far fa-clock"></i> {{ notification.created_at|timesince }} {% trans "ago" %}
+                    </div>
+                  </div>
+                </div>
+              </a>
+              
+              {% if not forloop.last %}
+                <div class="dropdown-divider my-0"></div>
+              {% endif %}
+            {% empty %}
+              <div class="dropdown-item text-center text-muted py-3">
+                <i class="fas fa-bell-slash fa-lg mb-2"></i>
+                <div class="small">{% trans "No notifications" %}</div>
+              </div>
             {% endfor %}
-          {% else %}
-            <div class="px-3 py-2 text-muted small">
-              {% trans "You don't have notifications " %}
-            </div>
+          </div>
+          
+          <!-- Footer with View All -->
+          {% if user.notifications %}
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item text-center text-primary font-weight-bold small" href="#">
+              {% trans "View All Notifications" %}
+            </a>
           {% endif %}
         </div>
       </div>
+      
       <!-- Profile Link -->
       <a href="{% url 'profile' %}" class="icon-btn mr-4">
         <i class="fas fa-user-circle fa-lg"></i>
@@ -95,6 +179,7 @@
   </div>
 </nav>
 {% endblock navigation_bar %}
+
 
 <!-- Messages -->
 {% if messages %}
