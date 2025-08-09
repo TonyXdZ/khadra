@@ -57,3 +57,17 @@ class Notification(models.Model):
         if not self.is_read:
             self.is_read = True
             self.save(update_fields=['is_read'])
+    
+    @staticmethod
+    def get_for_user(user):
+        """
+        Get all notifications for a user.
+        
+        Returns direct notifications + broadcast notifications created after user joined.
+        This prevents new users from seeing old announcement notifications.
+        """
+        return Notification.objects.filter(
+            models.Q(recipients=user) | 
+            (models.Q(is_broadcast=True) & 
+             models.Q(created_at__gte=user.date_joined))
+        ).distinct().order_by('-created_at')

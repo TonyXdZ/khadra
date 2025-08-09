@@ -11,4 +11,4 @@ class NotificationsListView(LoginRequiredMixin, ListView):
     template_name = 'notifications/notifications_list.html'
 
     def get_queryset(self, **kwargs):
-        return self.request.user.notifications.all()
+        return Notification.get_for_user(user=self.request.user)
