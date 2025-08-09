@@ -6,7 +6,6 @@ from django.urls import reverse
 from django.utils import timezone
 from users.models import Profile, City
 from users.tests.test_utils import create_new_user
-from users.messages import users_messages
 from core.tests.test_utils import create_initiative, create_multiple_initiative_reviews
 from notifications.models import Notification
 from core.tasks import (evaluate_initiative_reviews_task, 
@@ -274,3 +273,61 @@ class NotificationsTestCase(TestCase):
         self.assertTrue(creator_notified)
         self.assertTrue(volunteer_notified)
         self.assertTrue(volunteer_2_notified)
+
+    def test_notification_listview(self):
+        """
+        Verify notifications ListView shows only current user related notifications.
+        """
+        user = create_new_user(email='user@gmail.com',
+                                    username='user',
+                                    password='qsdflkjlkj',
+                                    phone_number='+213555447766', 
+                                    bio='Some good bio',
+                                    account_type='manager',
+                                    city=self.annaba_city,
+                                    geo_location=self.point_in_annaba,
+                                    )
+        
+        # This will generate an initiative_created notification for all managers
+        # thats why we started with notification_2 because this will be the first notification
+        initiative = create_initiative(created_by=self.initiative_creator,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba,
+                                        scheduled_datetime=timezone.now())
+
+        
+        notification_2 = Notification.objects.create(notification_type='initiative_approved', related_initiative=initiative)
+        notification_3 = Notification.objects.create(notification_type='initiative_review_failed', related_initiative=initiative)
+        notification_4 = Notification.objects.create(notification_type='initiative_started', related_initiative=initiative)
+        notification_5 = Notification.objects.create(notification_type='initiative_cancelled', related_initiative=initiative)
+        notification_6 = Notification.objects.create(notification_type='initiative_completed', related_initiative=initiative)
+        # Announcement should be is_broadcast and it should be included
+        # in the user notifications even when he is not added in reciepients
+        notification_7 = Notification.objects.create(notification_type='announcement', is_broadcast=True)
+        
+        notification_2.recipients.add(user)
+        notification_3.recipients.add(user)
+        notification_4.recipients.add(user)
+        notification_5.recipients.add(user)
+        notification_6.recipients.add(user)
+        
+        # User is not added as a reciepient and there is no broadcast notification here
+        excluded_notification_2 = Notification.objects.create(notification_type='initiative_approved', related_initiative=initiative)
+        excluded_notification_3 = Notification.objects.create(notification_type='initiative_review_failed', related_initiative=initiative)
+        excluded_notification_4 = Notification.objects.create(notification_type='initiative_started', related_initiative=initiative)
+        excluded_notification_5 = Notification.objects.create(notification_type='initiative_cancelled', related_initiative=initiative)
+        excluded_notification_6 = Notification.objects.create(notification_type='initiative_completed', related_initiative=initiative)
+        # Excluded announcement because it was created before user joined
+        yesterday = timezone.now() - timezone.timedelta(days=1)
+        excluded_notification_7 = Notification.objects.create(notification_type='announcement', 
+                                                            is_broadcast=True,
+                                                            created_at=yesterday)
+
+        client = Client()
+        client.login(username='user', password='qsdflkjlkj')
+        
+        response = client.get(reverse('notifications-list'))
+        notifications = response.context['notifications']
+        
+        self.assertEqual( notifications.count(), 7)
