@@ -160,7 +160,7 @@
           <!-- Footer with View All -->
           {% if user.notifications %}
             <div class="dropdown-divider"></div>
-            <a class="dropdown-item text-center text-primary font-weight-bold small" href="#">
+            <a class="dropdown-item text-center text-primary font-weight-bold small" href="{% url 'notifications-list' %}">
               {% trans "View All Notifications" %}
             </a>
           {% endif %}
