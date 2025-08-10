@@ -2,28 +2,59 @@
 {% load static i18n crispy_forms_tags %}
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %}{% trans "Login to khadra" %}{% endblock title %}
+{% block title %}{% trans "Login to Khadra" %}{% endblock title %}
+
 {% block content %}
-<div class="container">
+<div class="container my-5">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <h2 class="text-center mt-4">{% trans "Login" %}</h2>
-            <div class="form-container m-3 m-md-4 m-lg-5"> <!-- Responsive margins -->
-                <form method="POST">
-                    {% csrf_token %}
-                    {{ form|crispy }}
-                    <!-- Submit Button -->
-                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
-                    <button type="submit" class="btn btn-success btn-lg px-5">{% trans "Login" %}</button>
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-white py-4">
+                    <div class="text-center text-success mb-3">
+                        <i class="fas fa-user-lock fa-4x"></i>
+                    </div>
+                    <h3 class="card-title text-center">{% trans "Welcome Back to Khadra" %}</h3>
+                    <p class="text-center text-muted mt-2">
+                        {% trans "Together, let's make Algeria green again! 🌳🇩🇿" %}
+                    </p>
                 </div>
-                </form>
-
-                <hr>
-                <div class="form-footer">
-                    <p>{% trans "You don't have an account?" %}  <a href="{% url 'account_signup' %}">{% trans "Signup here" %}</a></p>
-                    <p class="mt-2">{% trans "By registering, you agree to our" %} <a href="#">{% trans "Terms of Service" %}</a> {% trans "and" %} <a href="#">{% trans "Privacy Policy" %}</a></p>
+                
+                <div class="card-body px-4 py-5">
+                    <form method="POST" class="mt-3">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-sign-in-alt mr-2"></i>
+                                {% trans "Login" %}
+                            </button>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <a href="{% url 'account_reset_password' %}" class="text-decoration-none">
+                                {% trans "Forgot your password?" %}
+                            </a>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-5 pt-3 border-top">
+                        <p class="mb-2">{% trans "Don't have an account yet?" %}</p>
+                        <a href="{% url 'account_signup' %}" class="btn btn-outline-primary btn-lg px-5">
+                            <i class="fas fa-user-plus mr-2"></i>
+                            {% trans "Create Account" %}
+                        </a>
+                    </div>
                 </div>
-
+                
+                <div class="card-footer bg-light text-center py-3">
+                    <small class="text-muted">
+                        {% trans "By logging in, you agree to our" %}
+                        <a href="#" class="text-decoration-none">{% trans "Terms of Service" %}</a> 
+                        {% trans "and" %}
+                        <a href="#" class="text-decoration-none">{% trans "Privacy Policy" %}</a>
+                    </small>
+                </div>
             </div>
         </div>
     </div>
