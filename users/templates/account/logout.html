@@ -3,17 +3,46 @@
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{% trans "Logout confirmation from Khadra" %}{% endblock title %}
+
 {% block content %}
-<div class="container-fluid mb-4 mt-4">
-    <div class="card shadow p-5 text-center">
-        <h4 class="mb-3 text-dark">{% trans "Are you sure you want to log out ?" %}</h4>
-        <div class="form-container m-3 m-md-4 m-lg-5"> <!-- Responsive margins -->
-            <form method="POST">
-                {% csrf_token %}
-                {{ form|crispy }}
-            <button type="submit" class="btn btn-lg btn-danger">{% trans "Logout" %}</button>
-            <a href="{% url 'home' %}" class="btn btn-lg btn-secondary ml-2">{% trans "Cancel" %}</a>
-            </form>
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-white py-4">
+                    <div class="text-center text-danger mb-3">
+                        <i class="fas fa-door-open fa-4x"></i>
+                    </div>
+                    <h3 class="card-title text-center">{% trans "Logout Confirmation" %}</h3>
+                </div>
+                
+                <div class="card-body px-4 py-5">
+                    <p class="lead text-center mb-4">
+                        {% trans "Are you sure you want to log out?" %}
+                    </p>
+                    
+                    <form method="POST" class="text-center">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <div class="mt-5 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-danger btn-lg px-5">
+                                <i class="fas fa-sign-out-alt mr-2"></i>
+                                {% trans "Logout" %}
+                            </button>
+                            <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-lg px-5 ml-3">
+                                <i class="fas fa-times-circle mr-2"></i>
+                                {% trans "Cancel" %}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="card-footer bg-light text-center py-3">
+                    <small class="text-muted">
+                        {% trans "Secure access to Khadra platform" %}
+                    </small>
+                </div>
+            </div>
         </div>
     </div>
 </div>
