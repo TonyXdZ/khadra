@@ -54,12 +54,7 @@
     <!-- Main Profile Content -->
     <div class="col-md-8">
       <div class="text-center bg-light mb-4">
-        {% if user.profile.profile_pic %}
-          <a href="{{ user.profile.profile_pic.url }}">
-            <img src="{{ user.profile.profile_pic_256.url }}" class="img-thumbnail rounded-circle shadow-lg p-3">
-          </a>
-        {% endif %}
-
+        <img src="{{ user.profile.get_profile_pic_256 }}" class="img-thumbnail rounded-circle shadow-lg p-3">
         <div class="d-inline-flex flex-column align-items-center mt-4 mb-3">
           <div class="d-flex align-items-end">
             <h4 class="mb-0">{{ user.username }}</h4>

@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.gis.db import models
 from django.contrib.gis.gdal import OGRGeometry
 from django.contrib.gis.geos import Point
+from django.contrib.staticfiles.storage import staticfiles_storage
 from django.db import connection
 from django.utils.translation import gettext as _
 from phonenumber_field.modelfields import PhoneNumberField
@@ -138,6 +139,30 @@ class Profile(models.Model):
 
     def __str__(self):
         return f'{self.user.username} profile'
+
+    def get_profile_pic_64(self):
+        """
+        Return profile_pic_64 if it exists
+        else return placeholder (images/profile_placeholder_64x64.svg)
+        TODO : check if user is logged in using a social account
+        and get the avatar from it
+        """
+        if self.profile_pic_64:
+            return self.profile_pic_64.url
+        else:
+            return staticfiles_storage.url('images/profile_placeholder_64x64.svg')
+    
+    def get_profile_pic_256(self):
+        """
+        Return profile_pic_256 if it exists
+        else return placeholder (images/profile_placeholder_64x64.svg)
+        TODO : check if user is logged in using a social account
+        and get the avatar from it
+        """
+        if self.profile_pic_256:
+            return self.profile_pic_256.url
+        else:
+            return staticfiles_storage.url('images/profile_placeholder.svg')
 
     class Meta:
         verbose_name = _('Profile')
