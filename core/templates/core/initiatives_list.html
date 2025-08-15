@@ -1,0 +1,218 @@
+{% extends "core/base.html" %}
+{% load static i18n leaflet_tags %}
+{% get_current_language as LANGUAGE_CODE %}
+{% block title %}{% trans "Initiatives in Khadra" %}{% endblock title %}
+
+{% block content %}
+<div class="container-fluid py-5 bg-light">
+    <div class="row justify-content-center mb-3">
+        <!-- Page Header -->
+        <h2 class="mb-4 text-center">
+            <i class="fa-solid fa-tree" style="color: #07ab38;"></i>
+            {% trans "Initiatives in Khadra" %}
+        </h2>
+    </div>
+    <hr>
+    {% if initiatives %}
+        <!-- Initiatives Grid -->
+        <div class="row">
+            {% for initiative in initiatives %}
+                <!-- Single Initiative Card -->
+                <div class="col-12 col-md-6 col-xl-4 mb-4 d-flex">
+                    <div class="card h-100 shadow-sm border-0 w-100" style="transition: all 0.3s ease; border-radius: 15px;">
+                        <a href="{% url 'initiative-detail' initiative.id %}" class="text-decoration-none text-dark">
+                            <!-- Card Header with Colored Top Border -->
+                            {% if initiative.status == 'under_review' %}
+                                <div class="card-header bg-warning text-white border-0 rounded-top" style="border-radius: 15px 15px 0 0 !important;">
+                            {% elif initiative.status == 'upcoming' %}
+                                <div class="card-header bg-info text-white border-0 rounded-top" style="border-radius: 15px 15px 0 0 !important;">
+                            {% elif initiative.status == 'ongoing' %}
+                                <div class="card-header bg-success text-white border-0 rounded-top" style="border-radius: 15px 15px 0 0 !important;">
+                            {% endif %}
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <!-- Initiative ID with Enhanced Styling -->
+                                    <h5 class="mb-0 font-weight-bold">
+                                        <i class="fas fa-hashtag mr-2"></i>
+                                        {% trans "Initiative" %} {{ initiative.id }}
+                                    </h5>
+                                    
+                                    <!-- Status Icon -->
+                                    {% if initiative.status == 'under_review' %}
+                                        <i class="fas fa-clock fa-lg"></i>
+                                    {% elif initiative.status == 'upcoming' %}
+                                        <i class="fas fa-calendar-plus fa-lg"></i>
+                                    {% elif initiative.status == 'ongoing' %}
+                                        <i class="fas fa-play-circle fa-lg"></i>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Status Text -->
+                                <small class="d-block mt-2 font-weight-light">
+                                    {% if initiative.status == 'under_review' %}
+                                        {% trans "Under Review" %}
+                                    {% elif initiative.status == 'upcoming' %}
+                                        {% trans "Upcoming" %}
+                                    {% elif initiative.status == 'ongoing' %}
+                                        {% trans "Ongoing" %}
+                                    {% endif %}
+                                </small>
+                            </div>
+
+                            <div class="card-body p-4">
+                                <!-- Location & Distance Section -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <div class="bg-light rounded p-3 border-left border-primary" style="border-left-width: 3px !important;">
+                                            <h6 class="text-primary mb-2 font-weight-bold">
+                                                <i class="fas fa-map-marker-alt mr-2"></i>
+                                                {% trans "Location" %}
+                                            </h6>
+                                            <p class="mb-1 h6 text-dark">{{ initiative.city }}</p>
+                                            {% if initiative.distance %}
+                                                <small class="text-info font-weight-bold">
+                                                    <i class="fas fa-road mr-1"></i>
+                                                    {{ initiative.distance.km|floatformat:1 }} km {% trans "away" %}
+                                                </small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Date & Time Section -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <div class="bg-light rounded p-3 border-left border-warning" style="border-left-width: 3px !important;">
+                                            <h6 class="text-warning mb-2 font-weight-bold">
+                                                <i class="fas fa-calendar-day mr-2"></i>
+                                                {% trans "Event Date" %}
+                                            </h6>
+                                            <p class="mb-1 h6 text-dark">
+                                                {{ initiative.scheduled_datetime|date:"M d, Y" }}
+                                            </p>
+                                            <small class="text-muted font-weight-bold">
+                                                <i class="fas fa-clock mr-1"></i>
+                                                {{ initiative.scheduled_datetime|time:"H:i" }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Volunteer Count Section -->
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="bg-success text-white rounded p-3 text-center">
+                                            <div class="d-flex align-items-center justify-content-center">
+                                                <i class="fas fa-users fa-2x mr-3"></i>
+                                                <div>
+                                                    <h4 class="mb-0 font-weight-bold">{{ initiative.volunteers.count }}</h4>
+                                                    <small class="font-weight-light">{% trans "volunteers" %}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card Footer -->
+                            <div class="card-footer bg-transparent border-0 text-center p-3">
+                                <small class="text-muted font-weight-bold">
+                                    <i class="fas fa-eye mr-2"></i>
+                                    {% trans "Click to view details" %}
+                                </small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <div class="row">
+                <div class="col-12">
+                    <nav aria-label="Notifications pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1" aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        {% endif %}
+
+    {% else %}
+        <!-- Enhanced Empty State -->
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-lg text-center" style="border-radius: 20px;">
+                    <div class="card-body p-5">
+                        <div class="mb-4">
+                            <i class="fas fa-seedling fa-5x text-muted opacity-50"></i>
+                        </div>
+                        <h3 class="h4 text-dark font-weight-bold mb-3">
+                            {% trans "No initiatives found" %}
+                        </h3>
+                        <p class="text-muted lead mb-4">
+                            {% trans "There are currently no initiatives." %}
+                        </p>
+                        <div class="bg-light rounded p-3">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                {% trans "Check back soon for new environmental initiatives in your area" %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Hover Effects Using Bootstrap Classes Only -->
+<style>
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 1rem 3rem rgba(0,0,0,0.175) !important;
+}
+
+.page-link:hover {
+    background-color: #28a745 !important;
+    color: white !important;
+}
+</style>
+{% endblock content %}

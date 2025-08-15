@@ -3,12 +3,14 @@ from datetime import timedelta
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.gis.db.models.functions import Distance
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.generic.edit import CreateView
 from django.views.generic.detail import DetailView
+from django.views.generic.list import ListView
 from django.views.generic import TemplateView
 from core.forms import InitiativeCreationForm, InitiativeReviewForm
 from core.models import Initiative
@@ -131,3 +133,28 @@ class InitiativeReviewView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
             context = self.get_context_data()
             context['review_form'] = form # Pass the invalid form back to the template
             return self.render_to_response(context)
+
+
+class InitiativeListView(LoginRequiredMixin, ListView):
+    model = Initiative
+    paginate_by = 5
+    context_object_name = 'initiatives'
+    template_name = 'core/initiatives_list.html'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        
+        # Status filtering
+        if user.profile.account_type == 'manager':
+            queryset = queryset.filter(status__in=['upcoming', 'ongoing', 'under_review'])
+        else:  # volunteer
+            queryset = queryset.filter(status__in=['upcoming', 'ongoing'])
+        
+        # Distance sorting
+        if user.profile.geo_location:
+            queryset = queryset.annotate(
+                distance=Distance('geo_location', user.profile.geo_location)
+            ).order_by('distance')
+        
+        return queryset
