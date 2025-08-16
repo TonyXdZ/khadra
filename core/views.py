@@ -137,7 +137,7 @@ class InitiativeReviewView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
 
 class InitiativeListView(LoginRequiredMixin, ListView):
     model = Initiative
-    paginate_by = 5
+    paginate_by = 20
     context_object_name = 'initiatives'
     template_name = 'core/initiatives_list.html'
 
