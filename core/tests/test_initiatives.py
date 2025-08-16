@@ -9,6 +9,7 @@ from users.tests.test_utils import create_new_user
 from users.messages import users_messages
 from core.models import Initiative
 from core.messages import core_messages
+from core.tests.test_utils import create_initiative
 
 
 UserModel = get_user_model()
@@ -24,6 +25,12 @@ class InitiativesTestCase(TestCase):
         self.client_2 = Client()
         self.annaba_city = City.objects.get(name='Annaba')
         self.point_in_annaba = self.annaba_city.get_random_location_point()
+        self.algiers_city = City.objects.get(name='Alger') # 600 km from Annaba
+        self.point_in_algiers = self.algiers_city.get_random_location_point()
+        self.oran_city = City.objects.get(name='Oran') # 400 km from Algiers 1200 km from Annaba
+        self.point_in_oran = self.oran_city.get_random_location_point()
+        self.init_list_url = reverse('initiatives-list')
+        
 
     def test_user_with_account_type_volunteer_get_403_in_create_initiative_view(self):
         """
@@ -353,3 +360,287 @@ class InitiativesTestCase(TestCase):
         self.assertEqual(post_review_response.status_code, 403)
         self.assertEqual(reviews_created, 0)
         
+    # INITIATIVES LIST TESTS
+    
+    def test_manager_sees_all_status_in_initiatives_list(self):
+        """
+        Test that managers see initiatives with all allowed 
+        statuses in itiatives list
+        """
+        manager = create_new_user(email='manager@gmail.com',
+                                    username='manager',
+                                    password='qsdflkjlkj',
+                                    phone_number='+213555447766', 
+                                    bio='Some good bio',
+                                    account_type='manager',
+                                    city=self.annaba_city,
+                                    geo_location=self.point_in_annaba,
+                                    )
+        
+        # Create initiatives with different statuses
+        upcoming = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba)
+        upcoming.status = 'upcoming'
+        upcoming.save()
+        ongoing = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba)
+        ongoing.status = 'ongoing'
+        ongoing.save()
+        
+        under_review = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba)
+        under_review.status = 'under_review'
+        under_review.save()
+        
+        completed = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba)
+        completed.status = 'completed'  # Should not appear
+        completed.save()
+
+        cancelled = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba)
+        cancelled.status = 'cancelled'  # Should not appear
+        cancelled.save()
+        
+        review_failed = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba)
+        review_failed.status = 'review_failed'  # Should not appear
+        review_failed.save()
+        
+
+        self.client_1.login(username='manager', password='qsdflkjlkj')
+        
+        response = self.client_1.get(self.init_list_url)
+        
+        self.assertEqual(response.status_code, 200)
+        initiatives = response.context['initiatives']
+        initiative_ids = [init.id for init in initiatives]
+        
+        self.assertIn(upcoming.id, initiative_ids)
+        self.assertIn(ongoing.id, initiative_ids)
+        self.assertIn(under_review.id, initiative_ids)
+        self.assertNotIn(completed.id, initiative_ids)
+        self.assertNotIn(cancelled.id, initiative_ids)
+        self.assertNotIn(review_failed.id, initiative_ids)
+
+    def test_manager_sees_distance_sorted_in_initiatives_list(self):
+        """Test that managers see initiatives sorted by distance in itiatives list"""
+        manager = create_new_user(email='manager@gmail.com',
+                                    username='manager',
+                                    password='qsdflkjlkj',
+                                    phone_number='+213555447766', 
+                                    bio='Some good bio',
+                                    account_type='manager',
+                                    city=self.annaba_city,
+                                    geo_location=self.point_in_annaba,
+                                    )
+        
+        # Create initiatives at different distances from Annaba
+        close_init = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        # Same location as manager
+                                        geo_location=self.point_in_annaba) 
+
+        medium_init = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.algiers_city,
+                                        # ~600KM far from manager
+                                        geo_location=self.point_in_algiers)
+
+        far_init = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.oran_city,
+                                        # ~1000KM far from manager
+                                        geo_location=self.point_in_oran)
+        
+        self.client_1.login(username='manager', password='qsdflkjlkj')
+        response = self.client_1.get(self.init_list_url)
+        
+        self.assertEqual(response.status_code, 200)
+        initiatives = list(response.context['initiatives'])
+        
+        # Should be ordered by distance (closest first)
+        self.assertEqual(initiatives[0].id, close_init.id)
+        self.assertEqual(initiatives[1].id, medium_init.id)
+        self.assertEqual(initiatives[2].id, far_init.id)
+        
+        # Check that distance annotation exists
+        self.assertTrue(hasattr(initiatives[0], 'distance'))
+        self.assertTrue(initiatives[0].distance.km < initiatives[1].distance.km)
+
+    
+    def test_volunteer_sees_only_upcoming_ongoing_in_initiatives_list(self):
+        """
+        Test that volunteers only see upcoming and ongoing 
+        initiatives in itiatives list
+        """
+        
+        manager = create_new_user(email='manager@gmail.com',
+                            username='manager',
+                            password='qsdflkjlkj',
+                            phone_number='+213555447766', 
+                            bio='Some good bio',
+                            account_type='manager',
+                            city=self.annaba_city,
+                            geo_location=self.point_in_annaba,
+                            )
+
+        volunteer = create_new_user(email='volunteer@gmail.com',
+                            username='volunteer',
+                            password='qsdflkjlkj',
+                            phone_number='+213553447766', 
+                            bio='Some good bio',
+                            account_type='volunteer',
+                            city=self.annaba_city,
+                            geo_location=self.point_in_annaba,
+                            )
+        
+        # Create initiatives with different statuses
+        upcoming = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba)
+        upcoming.status = 'upcoming'
+        upcoming.save()
+        ongoing = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba)
+        ongoing.status = 'ongoing'
+        ongoing.save()
+        
+        under_review = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba)
+        under_review.status = 'under_review'
+        under_review.save()
+        
+        completed = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba)
+        completed.status = 'completed'  # Should not appear
+        completed.save()
+
+        cancelled = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba)
+        cancelled.status = 'cancelled'  # Should not appear
+        cancelled.save()
+        
+        review_failed = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        geo_location=self.point_in_annaba)
+        review_failed.status = 'review_failed'  # Should not appear
+        review_failed.save()
+        
+        self.client_1.login(username="volunteer", password="qsdflkjlkj")
+        response = self.client_1.get(self.init_list_url)
+        
+        self.assertEqual(response.status_code, 200)
+        initiatives = response.context['initiatives']
+        initiative_ids = [init.id for init in initiatives]
+        
+        self.assertIn(upcoming.id, initiative_ids)
+        self.assertIn(ongoing.id, initiative_ids)
+        self.assertNotIn(under_review.id, initiative_ids)
+        self.assertNotIn(completed.id, initiative_ids)
+        self.assertNotIn(review_failed.id, initiative_ids)
+        self.assertNotIn(cancelled.id, initiative_ids)
+
+
+    def test_volunteer_sees_distance_sorted_initiatives_initiatives_list(self):
+        """Test that volunteers see initiatives sorted by distance in itiatives list"""
+
+        manager = create_new_user(email='manager@gmail.com',
+                            username='manager',
+                            password='qsdflkjlkj',
+                            phone_number='+213555447766', 
+                            bio='Some good bio',
+                            account_type='manager',
+                            city=self.annaba_city,
+                            geo_location=self.point_in_annaba,
+                            )
+
+        volunteer = create_new_user(email='volunteer@gmail.com',
+                            username='volunteer',
+                            password='qsdflkjlkj',
+                            phone_number='+213553447766', 
+                            bio='Some good bio',
+                            account_type='volunteer',
+                            city=self.annaba_city,
+                            geo_location=self.point_in_annaba,
+                            )
+        
+        # Create initiatives at different distances from Annaba
+        # and change the status of each one to 'upcoming'
+        # to make sure the volunteer can see them
+        close_init = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.annaba_city,
+                                        # Same location as volunteer
+                                        geo_location=self.point_in_annaba) 
+        close_init.status = 'upcoming'
+        close_init.save()
+
+        medium_init = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.algiers_city,
+                                        # ~600KM far from volunteer
+                                        geo_location=self.point_in_algiers)
+
+        medium_init.status = 'upcoming'
+        medium_init.save()
+
+        far_init = create_initiative(created_by=manager,
+                                        info="good initiative",
+                                        city=self.oran_city,
+                                        # ~1000KM far from volunteer
+                                        geo_location=self.point_in_oran)
+        far_init.status = 'upcoming'
+        far_init.save()
+
+        self.client_1.login(username="volunteer", password="qsdflkjlkj")
+        response = self.client_1.get(self.init_list_url)
+        
+        initiatives = list(response.context['initiatives'])
+        # Should be ordered by distance (closest first)
+        self.assertEqual(initiatives[0].id, close_init.id)
+        self.assertEqual(initiatives[1].id, medium_init.id)
+        self.assertEqual(initiatives[2].id, far_init.id)
+        self.assertTrue(initiatives[0].distance.km < initiatives[1].distance.km)
+
+        
+    def test_empty_queryset_in_initiatives_list(self):
+        """Test behavior when no initiatives exist"""
+        manager = create_new_user(email='manager@gmail.com',
+                            username='manager',
+                            password='qsdflkjlkj',
+                            phone_number='+213555447766', 
+                            bio='Some good bio',
+                            account_type='manager',
+                            city=self.annaba_city,
+                            geo_location=self.point_in_annaba)
+                            
+        self.client_1.login(username='manager', password='qsdflkjlkj')
+        response = self.client_1.get(self.init_list_url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['initiatives']), 0)
+        self.assertFalse(response.context['is_paginated'])
