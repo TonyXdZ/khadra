@@ -4,7 +4,7 @@
   <h3>🎨 Designers Wanted!</h3>
   <p>We're looking for talented designers to create a <strong>brand identity and logo</strong> for Khadra!</p>
   <p>If you'd like to contribute your design skills to our environmental cause, please reach out at:</p>
-  <p>📧 <strong>ayoubencherif23@gmail.com</strong></p>
+  <p>📧 <strong>khadra.devs@gmail.com</strong></p>
   <p>Your work will be seen by thousands of volunteers helping reforest Algeria!</p>
 </div>
 
@@ -13,11 +13,14 @@ Khadra is a Django-powered web application for an Algerian non-profit organizati
 ## 🌟 Features
 
 - **Manager Approval System**: New initiatives require manager reviews before activation
-- **Review Period**: 7-day voting window for managers to approve/reject new initiatives
-- **Automated Status Transitions**: Celery tasks handle initiative lifecycle changes
+- **Role Promotion Workflow**: Volunteers can request manager status, subject to approval by existing managers
+- **Review Period**: 7-day voting window for both new initiatives AND role promotion requests
+- **Automated Evaluation System**: Celery tasks handle:
+  - Initiative lifecycle transitions (status changes)
+  - Role promotion request evaluations
 - **Interactive Tree Map**: Visualize planting locations using PostGIS spatial data
 - **Volunteer Dashboard**: Track your contributions and upcoming events
-- **Real-time Notifications**: Get alerts about new planting projects
+- **Real-time Notifications**: Get alerts about new projects, role changes, and voting outcomes
 - **Project Participation**: Join planting initiatives with one click
 
 ## 🛠️ Technology Stack
@@ -38,10 +41,6 @@ Khadra is a Django-powered web application for an Algerian non-profit organizati
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-2496ED?logo=docker&logoColor=white)
 
-
-Here's the updated Docker installation section that incorporates the entrypoint.sh script:
-
-
 ## 🚀 Getting Started (Docker Recommended)
 
 ### Prerequisites
@@ -53,12 +52,6 @@ Here's the updated Docker installation section that incorporates the entrypoint.
 # Clone the repository
 git clone https://github.com/TonyXdZ/khadra.git
 cd khadra
-
-# Copy environment template
-cp .env.example .env
-
-# Edit environment variables (if needed)
-# nano .env
 
 # Build and start all services
 docker-compose up --build
@@ -144,7 +137,7 @@ def transition_initiative_to_completed_task(initiative_id):
     ...
 ```
 
-### Lifecycle Flowchart
+### Initiative Lifecycle Flowchart
 ```
 [New Initiative Created]
         ↓
@@ -162,11 +155,14 @@ evaluate_initiative_reviews_task()
 
 ```
 khadra/
-├── core/               # Main app (Tree planting projects management)
+├── core/               # Main app with initiative management
+│   ├── tasks/          # Celery task definitions for initiatives
+│   └── ...             # Other core functionality
 ├── users/              # User authentication & profiles
+│   ├── tasks/          # Celery task definitions for user management
+│   └── ...             # Other user functionality
 ├── notifications/      # User notification system
 ├── geodata/            # Spatial data and mapping functionality
-├── tasks/              # Celery task definitions
 ├── static/             # CSS, JS, and images
 ├── templates/          # HTML templates
 ├── manage.py
@@ -191,9 +187,23 @@ khadra/
   - `completed`: Finished initiative
 
 ### User System
-- Volunteer signup with email verification
-- Personalized dashboard showing participation history
-- Manager permissions for initiative approval
+- **Role-Based Access**:
+  - All new users start as `Volunteers`
+  - Volunteers can request manager status through promotion requests
+- **Account Lifecycle**:
+  - Volunteer signup with email verification
+  - *(Future: Social login via Google/Facebook)*
+  - Manager promotion workflow:
+    1. Volunteer submits promotion request
+    2. Existing managers vote during 7-day window
+    3. Automated approval/rejection based on voting consensus
+- **Privileges**:
+  - Volunteers: Participate in initiatives, track contributions
+  - Managers: Approve/reject new initiatives AND promotion requests
+- Personalized dashboard showing:
+  - Participation history
+  - Current promotion request status
+  - Pending votes (for managers)
 
 ## 🤝 How to Contribute
 
@@ -212,9 +222,8 @@ This project is licensed under the **GNU Affero General Public License v3.0** - 
 ## 📧 Contact
 
 For inquiries about the project, partnership opportunities, or design contributions:
-- Email: ayoubencherif23@gmail.com
+- Email: khadra.devs@gmail.com
 
 ---
 
 **Together, let's make Algeria green again!** 🌳🇩🇿
-```
