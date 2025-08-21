@@ -9,5 +9,6 @@ from users.models import (Profile,
 
 admin.site.register(Country, LeafletGeoAdmin)
 admin.site.register(City, LeafletGeoAdmin)
+admin.site.register(Profile, LeafletGeoAdmin)
 admin.site.register(UpgradeRequest)
 admin.site.register(UpgradeRequestReview)
