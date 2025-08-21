@@ -82,6 +82,22 @@
         </div>
       </div>
 
+    <!-- Upgrade Request Section -->
+    {% if user.profile.account_type == "volunteer" %}
+      {% if user.profile.has_pending_upgrade_request %}
+        <div class="alert alert-info text-center shadow-sm">
+          <i class="fas fa-hourglass-half mr-1"></i>
+          {% trans "Your manager upgrade request is still pending approval." %}
+        </div>
+      {% else %}
+        <div class="text-center mb-4">
+          <a href="{% url 'upgrade-request' %}" class="btn btn-outline-success">
+            <i class="fas fa-arrow-up mr-1"></i> {% trans "Request Manager Upgrade" %}
+          </a>
+        </div>
+      {% endif %}
+    {% endif %}
+
       <!-- User Info -->
       <section class="card mb-4 shadow">
         <div class="card-body">
