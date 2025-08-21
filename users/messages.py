@@ -54,7 +54,10 @@ users_messages = {
     'ACCOUNT_CREATED_SUCCESS' : _('Account created successfully'),
     'UNCOMPLETE_SIGN_UP_WARNING': _('You did not complete your sign up, please finish it to access all the features in the platform.'),
     'PROFILE_UPDATE_SUCCESS' : _('Profile updated successfully'),
-
+    'ALREADY_HAVE_PENDING_REQUEST': _('You already have a pending upgrade request. Please wait until managers review it.'),
+    'ALREADY_MANAGER': _('You are already a manager ! you do not need to request an upgrade.'),
+    'UPGRADE_REQUEST_SUBMITTED': _('Your request has been submitted successfully. managers will review it soon.'),
+    
     # forms
     'LOCATION_OUTSIDE_COUNTRY': _('Location must be within Algeria'),
     'LOCATION_UNKNOWN_CITY': _('Location not within any known city'),

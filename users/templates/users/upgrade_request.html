@@ -1,0 +1,63 @@
+{% extends "core/base.html" %}
+{% load i18n crispy_forms_tags %}
+
+{% block title %}{% trans "Upgrade to Manager in Khadra" %}{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <!-- Page Header -->
+            <h2 class="text-center mt-4">
+                <i class="fas fa-user-shield text-success"></i> 
+                {% trans "Request Manager Upgrade" %}
+            </h2>
+            <p class="text-muted text-center">
+                {% trans "Tell us how you can support Khadra as a manager." %}
+            </p>
+
+            <!-- Responsibilities Note -->
+            <div class="alert alert-info mt-3" role="alert">
+                <h5 class="alert-heading">
+                    <i class="fas fa-info-circle"></i> {% trans "Important Responsibilities" %}
+                </h5>
+                <p class="mb-1">
+                    {% trans "As a manager, you will:" %}
+                </p>
+                <ul class="mb-0">
+                    <li>{% trans "Evaluate and approve upgrade requests from other volunteers." %}</li>
+                    <li>{% trans "Create and manage new planting initiatives." %}</li>
+                    <li>{% trans "Approve initiatives submitted by others." %}</li>
+                    <li>{% trans "Receive more notifications and emails related to Khadra’s activities." %}</li>
+                </ul>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card shadow-sm border-0 rounded-lg mt-4 mb-5">
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <!-- Render hidden fields -->
+                        {% for hidden in form.hidden_fields %}
+                            {{ hidden }}
+                        {% endfor %}
+
+                        <!-- Motivation Field -->
+                        {{ form.motivation|as_crispy_field }}
+
+                        <!-- Submit Button -->
+                        <div class="d-flex justify-content-center mt-4">
+                            <button type="submit" class="btn btn-success btn-lg px-5">
+                                <i class="fas fa-paper-plane"></i> {% trans "Submit Request" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock content %}

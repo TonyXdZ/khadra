@@ -6,8 +6,11 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 from django.views.generic.edit import CreateView
 from django.views.generic import TemplateView, DetailView
-from users.models import Profile, Country, City
-from users.forms import ProfileCreationForm, UserUpdateForm, ProfileUpdateForm
+from users.models import Profile, Country, City, UpgradeRequest
+from users.forms import (ProfileCreationForm, 
+                        UserUpdateForm, 
+                        ProfileUpdateForm, 
+                        UpgradeRequestForm)
 from users.messages import users_messages
 
 UserModel = get_user_model()
@@ -92,3 +95,35 @@ class PublicProfileView(LoginRequiredMixin, TemplateView):
         user = get_object_or_404( UserModel, username=kwargs['username'] )     
         context['user'] = user
         return context
+
+class UpgradeRequestView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = UpgradeRequest
+    template_name = 'users/upgrade_request.html'
+    form_class = UpgradeRequestForm
+    success_url = reverse_lazy('profile')
+
+    def test_func(self):
+        user = self.request.user
+
+        # Check if user is already a manager
+        if hasattr(user, "profile") and user.profile.account_type == "manager":
+            self.permission_denied_message = users_messages["ALREADY_MANAGER"]
+            return False
+
+        # Check if user already has a pending request
+        if user.upgrade_requests.filter(status="pending").exists():
+            self.permission_denied_message = users_messages["ALREADY_HAVE_PENDING_REQUEST"]
+            return False
+
+        # Check if user already has an approved request
+        if user.upgrade_requests.filter(status="approved").exists():
+            self.permission_denied_message = users_messages["ALREADY_MANAGER"]
+            return False
+
+        # Otherwise, allow
+        return True
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        messages.success( self.request, users_messages['UPGRADE_REQUEST_SUBMITTED'])
+        return super().form_valid(form)

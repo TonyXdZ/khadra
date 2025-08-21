@@ -5,7 +5,7 @@ from django.utils.translation import gettext as _
 from leaflet.forms.widgets import LeafletWidget
 from phonenumber_field.formfields import PhoneNumberField
 from allauth.account.models import EmailAddress
-from users.models import Profile, Country, City
+from users.models import Profile, Country, City, UpgradeRequest
 from users.messages import users_messages
 
 UserModel = get_user_model()
@@ -184,3 +184,8 @@ class ProfileUpdateForm(ModelForm):
             # User Didn't change his Geo Locatio nor his City
             else:
                 return cleaned_data
+
+class UpgradeRequestForm(ModelForm):
+    class Meta:
+        model = UpgradeRequest
+        fields = ['motivation']
