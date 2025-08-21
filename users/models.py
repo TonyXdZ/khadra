@@ -152,6 +152,10 @@ class Profile(models.Model):
             return self.profile_pic_64.url
         else:
             return staticfiles_storage.url('images/profile_placeholder_64x64.svg')
+
+    def has_pending_upgrade_request(self):
+        """Return True if the user has at least one pending upgrade request."""
+        return self.user.upgrade_requests.filter(status='pending').exists()
     
     def get_profile_pic_256(self):
         """
