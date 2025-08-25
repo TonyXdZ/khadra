@@ -3,6 +3,7 @@ from django.dispatch import Signal
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from core.models import Initiative
+from users.models import UpgradeRequest
 from notifications.models import Notification
 
 User = get_user_model()
@@ -103,3 +104,21 @@ def handle_initiative_completed_signal(sender, instance, **kwargs):
 
     if volunteers.exists():
         notification.recipients.add(*volunteers)
+
+
+@receiver(post_save, sender=UpgradeRequest)
+def notify_managers_upgrade_request_created(sender, instance, created, **kwargs):
+    """
+    This signal is automatically emitted when a new upgrade request created.
+
+    Notify all users with account type manager to review
+    the new upgrade request.
+    """
+    if created:
+        managers = User.objects.filter(profile__account_type='manager')
+
+        notification = Notification.objects.create(
+            notification_type='upgrade_request_created',
+            related_upgrade_request=instance)
+        
+        notification.recipients.add(*managers)
