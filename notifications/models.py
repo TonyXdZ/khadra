@@ -3,11 +3,13 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from core.models import Initiative
+from users.models import UpgradeRequest
 
 User = get_user_model()
 
 class Notification(models.Model):
     NOTIFICATION_TYPES = [
+        # Initiatives related notifications categories.
         ('initiative_created', _('Initiative Created')),
         ('initiative_approved', _('Initiative Approved')),
         ('initiative_review_failed', _('Initiative Review Failed')),
@@ -18,7 +20,8 @@ class Notification(models.Model):
         # or with events unrelated to any initiative or specific user
         # this will come in handy in the future to communicate with all users
         ('announcement', _('Announcement')),
-        # TODO: more types related to users will be added.
+        # Users related notifictions categories
+        ('upgrade_request_created', _('Upgrade Request Created')),
     ]
 
     notification_type = models.CharField(_('Notification type'), max_length=50, choices=NOTIFICATION_TYPES)
@@ -39,6 +42,11 @@ class Notification(models.Model):
     related_initiative = models.ForeignKey(Initiative, on_delete=models.CASCADE, 
                                             null=True, blank=True, related_name='notifications',
                                             verbose_name=_('Related initiative'))
+
+    # Link the notification to the relevant Upgrade Request
+    related_upgrade_request = models.ForeignKey(UpgradeRequest, on_delete=models.CASCADE, 
+                                            null=True, blank=True, related_name='notifications',
+                                            verbose_name=_('Related upgrade request'))
     
     # Status
     is_read = models.BooleanField(_('Is read'), default=False)
