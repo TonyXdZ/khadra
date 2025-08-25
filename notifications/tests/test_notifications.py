@@ -4,7 +4,7 @@ from django.core.management import call_command
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
-from users.models import Profile, City
+from users.models import Profile, City, UpgradeRequest
 from users.tests.test_utils import create_new_user
 from core.tests.test_utils import create_initiative, create_multiple_initiative_reviews
 from notifications.models import Notification
@@ -331,3 +331,58 @@ class NotificationsTestCase(TestCase):
         notifications = response.context['notifications']
         
         self.assertEqual( notifications.count(), 7)
+
+    def test_notification_created_on_upgrade_request_created(self):
+        """
+        Tests that a notification is created and sent to all managers 
+        when a new upgrade request is created.
+        """
+        # Should be notified
+        manager_1 = create_new_user(email='manager_1@gmail.com',
+                                    username='manager_1',
+                                    password='qsdflkjlkj',
+                                    phone_number='+213555447766', 
+                                    bio='Some good bio',
+                                    account_type='manager',
+                                    city=self.annaba_city,
+                                    geo_location=self.point_in_annaba,
+                                    )
+        # Should be notified too    
+        manager_2 = create_new_user(email='manager_2@gmail.com',
+                                    username='manager_2',
+                                    password='qsdflkjlkj',
+                                    phone_number='+213555447766', 
+                                    bio='Some good bio',
+                                    account_type='manager',
+                                    city=self.annaba_city,
+                                    geo_location=self.point_in_annaba,
+                                    )
+
+        # User requesting upgrade
+        volunteer = create_new_user(email='volunteer@gmail.com',
+                                    username='volunteer',
+                                    password='qsdflkjlkj',
+                                    phone_number='+213555447766', 
+                                    bio='Some good bio',
+                                    account_type='volunteer',
+                                    city=self.annaba_city,
+                                    geo_location=self.point_in_annaba,
+                                    )
+        
+        upgrade_request = UpgradeRequest.objects.create(user=volunteer, motivation="Im a nice person...")
+
+        all_notifications = Notification.objects.all()
+        notification = Notification.objects.filter(related_upgrade_request__id=upgrade_request.id).first()
+        manager_notified = notification.recipients.contains(self.initiative_creator)
+        manager_1_notified = notification.recipients.contains(manager_1)
+        manager_2_notified = notification.recipients.contains(manager_2)
+        volunteer_not_notified = notification.recipients.contains(volunteer)
+
+        self.assertEqual(all_notifications.count(), 1)
+        # Only 3 users should be notified manager_user (self.initiative_creator)
+        # manager_1 and manager_2
+        self.assertEqual(notification.recipients.count(), 3)
+        self.assertTrue(manager_notified)
+        self.assertTrue(manager_1_notified)
+        self.assertTrue(manager_2_notified)
+        self.assertFalse(volunteer_not_notified)
