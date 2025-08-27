@@ -1,0 +1,98 @@
+{% extends "core/base.html" %}
+{% load i18n crispy_forms_tags %}
+
+{% block title %}{% trans "Review a request for an upgrade to manager in Khadra" %}{% endblock title %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Page Header -->
+    <div class="text-center mb-3">
+        <h2 class="mb-2">
+            <i class="fas fa-user-check text-primary mr-2"></i>
+            {% trans "Review Upgrade Request" %}
+        </h2>
+        <p class="lead text-muted">
+            <i class="fas fa-user mr-1"></i> {{ upgrade_request.user.username }}
+        </p>
+    </div>
+    <hr>
+    <div class="row">
+        <!-- User Information -->
+        <div class="col-12 col-lg-5 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <img src="{{ upgrade_request.user.profile.get_profile_pic_256 }}" 
+                         alt="{% trans 'Profile Picture' %}" 
+                         class="img-thumbnail rounded-circle shadow-lg p-3" width="256" height="256">
+                    <h5 class="card-title mb-1">{{ upgrade_request.user.username }}</h5>
+                    <p class="text-muted small mb-3">
+                        <i class="fas fa-calendar-alt mr-1"></i>
+                        {% trans "Joined" %} {{ upgrade_request.user.date_joined|date:"M d, Y" }}
+                    </p>
+                    
+                    <ul class="list-group list-group-flush text-left">
+                        <li class="list-group-item">
+                            <i class="fas fa-id-card mr-2 text-secondary"></i>
+                            <strong>{% trans "Name" %}: </strong>
+                            {% if upgrade_request.user.first_name or upgrade_request.user.last_name %}
+                                {{ upgrade_request.user.first_name }} {{ upgrade_request.user.last_name }}
+                            {% else %}
+                                <span class="text-muted">{% trans "Not provided" %}</span>
+                            {% endif %}
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-city mr-2 text-secondary"></i>
+                            <strong>{% trans "City" %}: </strong>{{ upgrade_request.user.profile.city }}
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-phone mr-2 text-secondary"></i>
+                            <strong>{% trans "Phone" %}: </strong>{{ upgrade_request.user.profile.phone_number }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Request & Review -->
+        <div class="col-12 col-lg-7 mb-4">
+            <!-- Motivation -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-lightbulb mr-2"></i>{% trans "Motivation" %}
+                </div>
+                <div class="card-body">
+                    <blockquote class="blockquote text-center mb-0">
+                        <p class="font-italic text-dark">
+                            {{ upgrade_request.motivation|linebreaks }}
+                        </p>
+                        <footer class="blockquote-footer mt-2">
+                            <i class="fas fa-user-edit mr-1"></i>{{ upgrade_request.user.username }}
+                        </footer>
+                    </blockquote>
+                </div>
+            </div>
+
+            <!-- Review Form -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-vote-yea mr-2"></i>{% trans "Your Review" %}
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ review_form|crispy }}
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-success btn-lg mr-2">
+                                <i class="fas fa-paper-plane mr-1"></i>{% trans "Submit" %}
+                            </button>
+                            <a href="{% url 'initiatives-list' %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-arrow-left mr-1"></i>{% trans "Back" %}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -7,4 +7,5 @@ urlpatterns = [
     path('profile/update/', views.ProfileUpdateView.as_view(), name='profile-update'),
     path('profile/<str:username>/', views.PublicProfileView.as_view(), name='public-profile'),
     path('upgrade-request/', views.UpgradeRequestView.as_view(), name='upgrade-request'),
+    path('upgrade-request/<pk>/review/', views.UpgradeRequestReviewView.as_view(), name='upgrade-request-review'),
 ]

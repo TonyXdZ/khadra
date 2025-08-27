@@ -57,6 +57,10 @@ users_messages = {
     'ALREADY_HAVE_PENDING_REQUEST': _('You already have a pending upgrade request. Please wait until managers review it.'),
     'ALREADY_MANAGER': _('You are already a manager ! you do not need to request an upgrade.'),
     'UPGRADE_REQUEST_SUBMITTED': _('Your request has been submitted successfully. managers will review it soon.'),
+    'MANAGERS_ONLY': _('You have to be a manager to access this page.'),
+    'UPGRADE_REQUEST_NOT_UNDER_REVIEW': _('This upgrade request is no longer under review.'),
+    'MANAGER_REVIEWED_ALREADY': _('You reviewed this upgrade request already.'),
+    'REVIEW_SUBMITTED_SUCCESSFULY': _('Your review has been submitted successfully! Thanks for taking the time to review this volunteer WE LOVE YOU <3'),
     
     # forms
     'LOCATION_OUTSIDE_COUNTRY': _('Location must be within Algeria'),

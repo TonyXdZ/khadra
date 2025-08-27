@@ -5,7 +5,11 @@ from django.utils.translation import gettext as _
 from leaflet.forms.widgets import LeafletWidget
 from phonenumber_field.formfields import PhoneNumberField
 from allauth.account.models import EmailAddress
-from users.models import Profile, Country, City, UpgradeRequest
+from users.models import (Profile, 
+                          Country, 
+                          City, 
+                          UpgradeRequest, 
+                          UpgradeRequestReview)
 from users.messages import users_messages
 
 UserModel = get_user_model()
@@ -189,3 +193,8 @@ class UpgradeRequestForm(ModelForm):
     class Meta:
         model = UpgradeRequest
         fields = ['motivation']
+
+class UpgradeRequestReviewForm(ModelForm):
+    class Meta:
+        model = UpgradeRequestReview
+        fields = ['vote', 'note']

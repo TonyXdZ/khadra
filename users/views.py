@@ -6,11 +6,16 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 from django.views.generic.edit import CreateView
 from django.views.generic import TemplateView, DetailView
-from users.models import Profile, Country, City, UpgradeRequest
+from users.models import (Profile, 
+                          Country, 
+                          City, 
+                          UpgradeRequest,
+                          UpgradeRequestReview)
 from users.forms import (ProfileCreationForm, 
                         UserUpdateForm, 
                         ProfileUpdateForm, 
-                        UpgradeRequestForm)
+                        UpgradeRequestForm,
+                        UpgradeRequestReviewForm)
 from users.messages import users_messages
 
 UserModel = get_user_model()
@@ -127,3 +132,55 @@ class UpgradeRequestView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         form.instance.user = self.request.user
         messages.success( self.request, users_messages['UPGRADE_REQUEST_SUBMITTED'])
         return super().form_valid(form)
+
+
+class UpgradeRequestReviewView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    template_name = 'users/upgrade_request_review.html'
+    model = UpgradeRequest
+    context_object_name = 'upgrade_request'
+
+    def test_func(self):
+        upgrade_request = self.get_object()
+
+        # 1. Check if the user is a manager
+        if self.request.user.profile.account_type != 'manager':
+            self.permission_denied_message = users_messages['MANAGERS_ONLY']
+            return False
+
+        # 2. Check if the upgrade requset is still pending (under review)
+        if upgrade_request.status != 'pending':
+            self.permission_denied_message = users_messages['UPGRADE_REQUEST_NOT_UNDER_REVIEW']
+            return False
+
+        # 3. Check if the manager has already reviewed this upgrade request
+        existing_review = upgrade_request.reviews.filter(manager=self.request.user).first()
+        if existing_review:
+            self.permission_denied_message = users_messages['MANAGER_REVIEWED_ALREADY']
+            return False
+
+        # If all checks pass, grant access
+        return True
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add the review form to the context for GET requests
+        context['review_form'] = UpgradeRequestReviewForm() # Pass initial data if needed
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object() # Get the initiative instance
+        form = UpgradeRequestReviewForm(self.request.POST)
+
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.upgrade_request = self.object # Associate with the current UpgradeRequest
+            review.manager = self.request.user   # Associate with the current logged-in user (manager)
+            review.save()
+            messages.success(request, users_messages['REVIEW_SUBMITTED_SUCCESSFULY'])
+            # Redirect to the detail page
+            return redirect('initiatives-list')
+        else:
+            # If the form is invalid, re-render the detail view with the form errors
+            context = self.get_context_data()
+            context['review_form'] = form # Pass the invalid form back to the template
+            return self.render_to_response(context)
