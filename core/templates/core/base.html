@@ -79,8 +79,10 @@
           <div style="max-height: 400px; overflow-y: auto;">
             {% for notification in user.notifications.all|slice:":10" %}
               <a class="dropdown-item {% if not notification.is_read %}bg-light{% endif %}" 
-                 href="{% if notification.related_initiative and notification.notification_type != 'announcement' %}
+                href="{% if notification.related_initiative and notification.notification_type != 'announcement' %}
                           {% url 'initiative-detail' notification.related_initiative.id %}
+                        {% elif notification.notification_type == 'upgrade_request_created' and notification.related_upgrade_request %}
+                          {% url 'upgrade-request-review' notification.related_upgrade_request.id %}
                         {% else %}
                           {% url 'notifications-list' %}
                         {% endif %}">
@@ -102,6 +104,8 @@
                       <i class="fas fa-flag-checkered text-success"></i>
                     {% elif notification.notification_type == 'announcement' %}
                       <i class="fas fa-bullhorn text-primary"></i>
+                    {% elif notification.notification_type == 'upgrade_request_created' %}
+                      <i class="fas fa-user-plus text-info"></i>
                     {% endif %}
                   </div>
                   
@@ -136,6 +140,8 @@
                         {% trans "Initiative completed" %}
                       {% elif notification.notification_type == 'announcement' %}
                         {{ notification.message|truncatewords:8 }}
+                      {% elif notification.notification_type == 'upgrade_request_created' %}
+                        {% trans "A volunteer requested an account upgrade to manager" %}
                       {% endif %}
                     </div>
                     

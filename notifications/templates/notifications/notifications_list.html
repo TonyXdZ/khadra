@@ -35,8 +35,35 @@
                                     </small>
                                 </div>
                             </div>
+
+                        {% elif notification.notification_type == 'upgrade_request_created' %}
+                            <!-- Upgrade Request -->
+                            <a href="{% url 'upgrade-request-review' notification.related_upgrade_request.id %}"
+                               class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm hover-shadow">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="mr-3">
+                                            <i class="fas fa-user-plus fa-2x text-info"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="mb-1 font-weight-bold text-info">
+                                                {% trans "Upgrade Request" %}
+                                            </h5>
+                                            <p class="mb-1">
+                                                {% trans "👤 A volunteer has requested an upgrade to manager. Please review their request." %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="far fa-clock mr-1"></i>
+                                        {{ notification.created_at|date:"M d, Y" }}<br>
+                                        <span class="float-right">{{ notification.created_at|time:"H:i" }}</span>
+                                    </small>
+                                </div>
+                            </a>
+
                         {% else %}
-                            <!-- Regular notification - clickable -->
+                            <!-- Regular notification - initiatives -->
                             <a href="{% url 'initiative-detail' notification.related_initiative.id %}" 
                                class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm hover-shadow">
                                 <div class="d-flex w-100 justify-content-between">
