@@ -79,13 +79,13 @@
           <div style="max-height: 400px; overflow-y: auto;">
             {% for notification in user.notifications.all|slice:":10" %}
               <a class="dropdown-item {% if not notification.is_read %}bg-light{% endif %}" 
-                href="{% if notification.related_initiative and notification.notification_type != 'announcement' %}
-                          {% url 'initiative-detail' notification.related_initiative.id %}
-                        {% elif notification.notification_type == 'upgrade_request_created' and notification.related_upgrade_request %}
-                          {% url 'upgrade-request-review' notification.related_upgrade_request.id %}
-                        {% else %}
-                          {% url 'notifications-list' %}
-                        {% endif %}">
+                href="{% if notification.related_object and notification.notification_type != 'announcement' %}
+                        {% url 'initiative-detail' notification.object_id %}
+                      {% elif notification.notification_type == 'upgrade_request_created' and notification.related_object %}
+                        {% url 'upgrade-request-review' notification.object_id %}
+                      {% else %}
+                        {% url 'notifications-list' %}
+                      {% endif %}">
                 
                 <div class="d-flex">
                   <!-- Icon -->
@@ -210,7 +210,6 @@
         <h5 class="text-uppercase mb-3">{% trans "Rules" %}</h5>
         <p><a href="#">{% trans "Terms of use" %}</a></p>
         <p><a href="#">{% trans "Privacy Policy" %}</a></p>
-        <p><a href="#">{% trans "Ads Policy" %}</a></p>
       </div>
       <div class="col-md-6 footer-links mt-4">
         <h5 class="text-uppercase">{% trans "About" %}</h5>

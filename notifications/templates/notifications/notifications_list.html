@@ -38,7 +38,7 @@
 
                         {% elif notification.notification_type == 'upgrade_request_created' %}
                             <!-- Upgrade Request -->
-                            <a href="{% url 'upgrade-request-review' notification.related_upgrade_request.id %}"
+                            <a href="{% url 'upgrade-request-review' notification.object_id %}"
                                class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm hover-shadow">
                                 <div class="d-flex w-100 justify-content-between">
                                     <div class="d-flex align-items-center">
@@ -64,7 +64,7 @@
 
                         {% else %}
                             <!-- Regular notification - initiatives -->
-                            <a href="{% url 'initiative-detail' notification.related_initiative.id %}" 
+                            <a href="{% url 'initiative-detail' notification.object_id %}" 
                                class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm hover-shadow">
                                 <div class="d-flex w-100 justify-content-between">
                                     <div class="d-flex align-items-center">
@@ -85,7 +85,7 @@
                                         </div>
                                         <div>
                                             <h5 class="mb-1">
-                                                {% blocktrans with initiative_id=notification.related_initiative.id %}
+                                                {% blocktrans with initiative_id=notification.related_object.id %}
                                                 Initiative number {{ initiative_id }}
                                                 {% endblocktrans %}
                                             </h5>
