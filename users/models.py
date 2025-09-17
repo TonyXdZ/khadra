@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.gis.db import models
 from django.contrib.gis.gdal import OGRGeometry
 from django.contrib.gis.geos import Point
@@ -213,7 +214,11 @@ class UpgradeRequest(models.Model):
         default=timezone.now,
         db_index=True
         )
-
+    
+    notifications = GenericRelation(
+        'notifications.Notification',
+        related_query_name='upgrade_request'
+    )
     class Meta:
         verbose_name = _('Upgrade Request')
         verbose_name_plural = _('Upgrade Requests')

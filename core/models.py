@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.gis.db import models
 from django.utils import timezone
 from django.utils.timezone import now
@@ -51,6 +52,8 @@ class Initiative(models.Model):
     date_created = models.DateTimeField(_('Date created'), default=timezone.now)
 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,verbose_name=_('Created by'), related_name='initiatives')
+
+    notifications = GenericRelation('notifications.Notification', related_query_name='initiative')
 
     def __str__(self):
         return f"initiative {self.pk}"
