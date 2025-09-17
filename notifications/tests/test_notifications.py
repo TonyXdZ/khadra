@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
@@ -75,7 +76,8 @@ class NotificationsTestCase(TestCase):
                                         geo_location=self.point_in_annaba)
 
         all_notifications = Notification.objects.all()
-        notification = Notification.objects.filter(related_initiative__id=initiative.id).first()
+        content_type = ContentType.objects.get_for_model(initiative)
+        notification = Notification.objects.filter(content_type=content_type, object_id=initiative.pk).first()
         manager_1_notified = notification.recipients.contains(manager_1)
         manager_2_notified = notification.recipients.contains(manager_2)
         volunteer_not_notified = notification.recipients.contains(volunteer)
@@ -112,7 +114,7 @@ class NotificationsTestCase(TestCase):
         creator_notified = notification.recipients.contains(self.initiative_creator)
         
         self.assertEqual(notification.recipients.count(), 1) # Only 1 users should be notified
-        self.assertEqual(notification.related_initiative, initiative)
+        self.assertEqual(notification.related_object, initiative)
         self.assertTrue(creator_notified)
 
     def test_notification_created_on_initiative_review_failed_lack_of_reviews(self):
@@ -141,7 +143,7 @@ class NotificationsTestCase(TestCase):
         creator_notified = notification.recipients.contains(self.initiative_creator)
         
         self.assertEqual(notification.recipients.count(), 1) # Only 1 users should be notified
-        self.assertEqual(notification.related_initiative, initiative)
+        self.assertEqual(notification.related_object, initiative)
         self.assertEqual(notification.message, 'lack_of_reviews')
         self.assertTrue(creator_notified)
         
@@ -171,7 +173,7 @@ class NotificationsTestCase(TestCase):
         creator_notified = notification.recipients.contains(self.initiative_creator)
         
         self.assertEqual(notification.recipients.count(), 1) # Only 1 users should be notified
-        self.assertEqual(notification.related_initiative, initiative)
+        self.assertEqual(notification.related_object, initiative)
         self.assertEqual(notification.message, 'rejected_by_managers')
         self.assertTrue(creator_notified)
         
@@ -219,7 +221,7 @@ class NotificationsTestCase(TestCase):
         # 3 users should be notified
         # initiative creator, volunteer, volunteer_2
         self.assertEqual(notification.recipients.count(), 3)
-        self.assertEqual(notification.related_initiative, initiative)
+        self.assertEqual(notification.related_object, initiative)
         self.assertTrue(volunteer_notified)
         self.assertTrue(volunteer_2_notified)
         
@@ -269,7 +271,7 @@ class NotificationsTestCase(TestCase):
         # 3 users should be notified
         # initiative creator, volunteer, volunteer_2
         self.assertEqual(notification.recipients.count(), 3)
-        self.assertEqual(notification.related_initiative, initiative)
+        self.assertEqual(notification.related_object, initiative)
         self.assertTrue(creator_notified)
         self.assertTrue(volunteer_notified)
         self.assertTrue(volunteer_2_notified)
@@ -297,11 +299,11 @@ class NotificationsTestCase(TestCase):
                                         scheduled_datetime=timezone.now())
 
         
-        notification_2 = Notification.objects.create(notification_type='initiative_approved', related_initiative=initiative)
-        notification_3 = Notification.objects.create(notification_type='initiative_review_failed', related_initiative=initiative)
-        notification_4 = Notification.objects.create(notification_type='initiative_started', related_initiative=initiative)
-        notification_5 = Notification.objects.create(notification_type='initiative_cancelled', related_initiative=initiative)
-        notification_6 = Notification.objects.create(notification_type='initiative_completed', related_initiative=initiative)
+        notification_2 = Notification.objects.create(notification_type='initiative_approved', related_object=initiative)
+        notification_3 = Notification.objects.create(notification_type='initiative_review_failed', related_object=initiative)
+        notification_4 = Notification.objects.create(notification_type='initiative_started', related_object=initiative)
+        notification_5 = Notification.objects.create(notification_type='initiative_cancelled', related_object=initiative)
+        notification_6 = Notification.objects.create(notification_type='initiative_completed', related_object=initiative)
         # Announcement should be is_broadcast and it should be included
         # in the user notifications even when he is not added in reciepients
         notification_7 = Notification.objects.create(notification_type='announcement', is_broadcast=True)
@@ -313,11 +315,11 @@ class NotificationsTestCase(TestCase):
         notification_6.recipients.add(user)
         
         # User is not added as a reciepient and there is no broadcast notification here
-        excluded_notification_2 = Notification.objects.create(notification_type='initiative_approved', related_initiative=initiative)
-        excluded_notification_3 = Notification.objects.create(notification_type='initiative_review_failed', related_initiative=initiative)
-        excluded_notification_4 = Notification.objects.create(notification_type='initiative_started', related_initiative=initiative)
-        excluded_notification_5 = Notification.objects.create(notification_type='initiative_cancelled', related_initiative=initiative)
-        excluded_notification_6 = Notification.objects.create(notification_type='initiative_completed', related_initiative=initiative)
+        excluded_notification_2 = Notification.objects.create(notification_type='initiative_approved', related_object=initiative)
+        excluded_notification_3 = Notification.objects.create(notification_type='initiative_review_failed', related_object=initiative)
+        excluded_notification_4 = Notification.objects.create(notification_type='initiative_started', related_object=initiative)
+        excluded_notification_5 = Notification.objects.create(notification_type='initiative_cancelled', related_object=initiative)
+        excluded_notification_6 = Notification.objects.create(notification_type='initiative_completed', related_object=initiative)
         # Excluded announcement because it was created before user joined
         yesterday = timezone.now() - timezone.timedelta(days=1)
         excluded_notification_7 = Notification.objects.create(notification_type='announcement', 
@@ -372,7 +374,8 @@ class NotificationsTestCase(TestCase):
         upgrade_request = UpgradeRequest.objects.create(user=volunteer, motivation="Im a nice person...")
 
         all_notifications = Notification.objects.all()
-        notification = Notification.objects.filter(related_upgrade_request__id=upgrade_request.id).first()
+        content_type = ContentType.objects.get_for_model(upgrade_request)
+        notification = Notification.objects.filter(content_type=content_type, object_id=upgrade_request.pk).first()
         manager_notified = notification.recipients.contains(self.initiative_creator)
         manager_1_notified = notification.recipients.contains(manager_1)
         manager_2_notified = notification.recipients.contains(manager_2)
