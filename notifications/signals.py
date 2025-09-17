@@ -27,7 +27,7 @@ def notify_managers_initiative_created(sender, instance, created, **kwargs):
 
         notification = Notification.objects.create(
             notification_type='initiative_created',
-            related_initiative=instance)
+            related_object=instance)
         
         notification.recipients.add(*managers)
 
@@ -42,7 +42,7 @@ def handle_initiative_approval(sender, instance, **kwargs):
     """
     notification = Notification.objects.create(
         notification_type='initiative_approved',
-        related_initiative=instance
+        related_object=instance
     )
     notification.recipients.add(instance.created_by)
 
@@ -62,7 +62,7 @@ def handle_initiative_review_failed(sender, instance, reason, **kwargs):
     """
     notification = Notification.objects.create(
         notification_type='initiative_review_failed',
-        related_initiative=instance,
+        related_object=instance,
         message=reason,
     )
     notification.recipients.add(instance.created_by)
@@ -78,7 +78,7 @@ def handle_initiative_started_signal(sender, instance, **kwargs):
     """
     notification = Notification.objects.create(
         notification_type='initiative_started',
-        related_initiative=instance
+        related_object=instance
     )
     volunteers = instance.volunteers.all()
     notification.recipients.add(instance.created_by)
@@ -97,7 +97,7 @@ def handle_initiative_completed_signal(sender, instance, **kwargs):
     """
     notification = Notification.objects.create(
         notification_type='initiative_completed',
-        related_initiative=instance
+        related_object=instance
     )
     volunteers = instance.volunteers.all()
     notification.recipients.add(instance.created_by)
@@ -119,6 +119,6 @@ def notify_managers_upgrade_request_created(sender, instance, created, **kwargs)
 
         notification = Notification.objects.create(
             notification_type='upgrade_request_created',
-            related_upgrade_request=instance)
+            related_object=instance)
         
         notification.recipients.add(*managers)
